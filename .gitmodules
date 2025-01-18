@@ -1,0 +1,8 @@
+[submodule "documentation"]
+	path = documentation
+	url = https://github.com/Cyberdom123/quadcopter---documentation
+	branch = main
+[submodule "hardware"]
+	path = hardware
+	url = https://github.com/Cyberdom123/quadcopter---hardware
+	branch = main
