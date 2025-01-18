@@ -1,7 +1,0 @@
-openpcd
-arm-none-eabi-* (toolchain)
-cmake > 3.22
-
-
-for debugging in vscode
-- cortex debug
