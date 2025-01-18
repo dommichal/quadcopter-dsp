@@ -43,6 +43,69 @@ state of the system and a desirable reference state.
 
 More detailed documentation has been placed in the project submodule "documentation".
 
+## Building Firmware
+
+1. **Clone the Repository**:
+  ```sh
+  git clone https://github.com/Cyberdom123/quadcopter-dsp.git
+  cd quadcopter-dsp
+  ```
+
+2. **Initialize and Update Submodules**:
+  ```sh
+  git submodule update --init --recursive
+  ```
+
+3. **Install Required Tools**:
+  - Ensure you have the ARM GCC toolchain installed.
+  - Ensure you have CMake version 3.22 or higher installed.
+  - Install `stlink` for flashing the firmware to the STM32 MCU.
+
+4. **Build the Firmware**:
+  ```sh
+  cd firmware
+  cmake -S . -B build/
+  cd build
+  cmake --build
+  ```
+
+5. **Flash the Firmware**:
+  ```sh
+  cmake --build . --target fc-stm32.flash_stlink
+  ```
+
+7. **Run the Quadcopter**:
+  - Power up the quadcopter and ensure all connections are secure.
+  - Use the Xbox controller connected to the PC to control the quadcopter.
+
+8. **Troubleshooting**:
+  - Refer to the detailed documentation in the `documentation` submodule for troubleshooting steps and additional information.
+
+## Running Scripts
+
+1. **Navigate to the Scripts Directory**:
+  ```sh
+  cd scripts
+  ```
+
+2. **Install required pip packages**
+  ```sh
+  pip3 install -r requirements.txt
+  ```
+
+2. **Run the Desired Script**:
+  - Ensure you have Python installed.
+  - Execute the script using Python:
+  ```sh
+  python3 script_name.py
+  ```
+
+3. **Available Scripts**:
+  - `gamepad_controller.py`: This script is responsible for handling the gamepad input and translating it into commands for the quadcopter.
+  - `EMA.ipynb`: This Jupyter notebook contains the implementation and analysis of the Exponential Moving Average (EMA) filter.
+  - `IIR.ipynb`: This Jupyter notebook includes the design and analysis of Infinite Impulse Response (IIR) filters.
+
+
 ## Components list
 
 - 7x20mm 3.7V DC 46500RPM Motors CCW
