@@ -21,9 +21,6 @@ void IMU_conversion_complete_callback(const float *acc, const float *gyro) {
     static float angles[3];
 
     Estimate_Angles(angles, angle_change, acc, gyro);
-    
-    int16_t opticalflow_velocities[3];
-    HAL_OPTICALFLOW_calculate(opticalflow_velocities, angles, gyro, HAL_GetTick());
     Stabilize(angles, angle_change, rc.controls_inputs);
     Motors_Switch(rc.power_on);
 
@@ -36,11 +33,6 @@ void IMU_conversion_complete_callback(const float *acc, const float *gyro) {
     // telemetry.floatingPoint[5] = (float)rc.controls_inputs[roll];
 }
 
-void HAL_OPTICALFLOW_conversion_complete_callback(const HAL_OPTICALFLOW_conversion_result_t *result) {
-    telemetry.floatingPoint[4] = result->yaw;
-    telemetry.floatingPoint[5] = result->pitch;
-}
-
 void FC_init() {
     Stabilizer_init();
     const float dt = 0.001f, comp_alpha = 0.001f, iir_tau = 0.04f;
@@ -49,11 +41,9 @@ void FC_init() {
     HAL_RADIO_init(HAL_RADIO_receive_complete_callback,
                    HAL_RADIO_request_receive_callback);
     HAL_IMU_init(IMU_conversion_complete_callback);
-    HAL_OPTICALFLOW_init(HAL_OPTICALFLOW_conversion_complete_callback);
     HAL_IMU_calibrate();
     
     HAL_IMU_start_conversion();
-    HAL_OPTICALFLOW_start_conversion();
     HAL_RADIO_start_listening();
 }
 

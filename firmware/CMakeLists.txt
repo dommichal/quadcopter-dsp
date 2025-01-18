@@ -47,10 +47,6 @@ add_executable(${CMAKE_PROJECT_NAME}
     # Core/Src/drivers/flash_memory.c
     # Core/Src/drivers/ibus.c
     Core/Src/drivers/motors.c
-    # Core/Src/drivers/mpu6050.c
-    # Core/Src/drivers/nrf24l01.c
-    # Core/Src/drivers/w25q64.c
-
     Core/Src/dsp/angle_estimation.c
     Core/Src/dsp/filters.c
     Core/Src/dsp/pid.c
@@ -82,7 +78,6 @@ add_subdirectory(HAL_STM32/${MCU_FAMILY}_HAL_Driver)
 # Add selected libraries
 add_subdirectory(HAL_Flight_Controller/MPU6050)
 add_subdirectory(HAL_Flight_Controller/NRF24L01)
-add_subdirectory(HAL_Flight_Controller/OPTICALFLOW)
 
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
@@ -91,7 +86,6 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     # PRIVATE
     mpu6050
     nrf24l01
-    opticalflow
 )
 
 target_stlink_flash(${CMAKE_PROJECT_NAME})

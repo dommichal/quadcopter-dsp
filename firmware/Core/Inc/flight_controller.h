@@ -7,7 +7,6 @@ extern "C" {
 
 #include "hal_imu.h"
 #include "hal_radio.h"
-#include "hal_opticalflow.h"
 
 #include "rc.h"
 #include "dsp/stabilizer.h"
