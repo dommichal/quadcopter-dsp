@@ -28,18 +28,18 @@ and for piloting the UAV using an Xbox controller connected to the PC.
 To keep the UAV stable it is essential to keep it at a set (stable) angle during movement.
 For instance, when we want the drone to fly up vertically, the roll and pitch angle have to be
 set to 0 degrees. The IMU supplies the data about displacement and angular velocity and a
-suitable mathematical model processes the data in order to estimate the angles.
-Finally the integration of data from both sensors with the help of filtration algorithms,
+suitable mathematical model processes the data in order to estimate the angles. Finally
+the integration of data from both sensors with the help of filtration algorithms,
 such as complementary filter or Kalman filter allows us to gain precise information about
 the angles and for effective stabilisation of the quadcopter during flight. In our project we
 used the Kalman filter. It is an aimed at estimating the actual state of the system based
 on the observer measurements with Gaussian noise. The algorithm works in two main steps:
-estimation of the state of the system based on previous state and correcting it during the next
-measurement. Kalman filter uses the mathematical model and data about Gaussian noise in
-order to minimalise the estimates and measurement unceirtanties.
-The angle estimates and yaw angular velocity is fed into the regulation system consisitng
-of three PID regulators for every quantity. The PID regulator works by minimising the difference
-between the actual state of the system and a desirable reference state.
+estimation of the state of the system based on previous state and correcting it during the 
+next measurement. Kalman filter uses the mathematical model and data about Gaussian noise in
+order to minimalise the estimates and measurement unceirtanties. The angle estimates and
+yaw angular velocity is fed into the regulation system consisitng of three PID regulators
+for every quantity. The PID regulator works by minimising the difference between the actual
+state of the system and a desirable reference state.
 
 More detailed documentation has been placed in the project submodule "documentation".
 
