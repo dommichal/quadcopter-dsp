@@ -6,7 +6,7 @@ unit, which combines MEMS accelerometer and gyroscope into a single IC. The comb
 sensor readings from the IMU combined with an adequate mathematical model and a regulating
 system allows to make a quadcopter with a stable control system.
 
-![](https://github.com/Cyberdom123/quadcopter-dsp/blob/develop/photos/video.gif)
+![](https://github.com/Cyberdom123/quadcopter---documentation/tree/main/img/video.gif)
 
 
 # Quadcopter project implementation
@@ -26,7 +26,7 @@ SPI bus and also uses the DMA mechanism. Another nRF connected to the PC is used
 communicate with the quadcopter. The transceivers are used in order to read telemetry data
 and for piloting the UAV using an Xbox controller connected to the PC.
 
-![](https://github.com/Cyberdom123/quadcopter-dsp/blob/develop/photos/dsp_sch.jpg)
+![](https://github.com/Cyberdom123/quadcopter---documentation/tree/main/img/dsp_sch.jpg)
 
 To keep the UAV stable it is essential to keep it at a set (stable) angle during movement.
 For instance, when we want the drone to fly up vertically, the roll and pitch angle have to be
@@ -63,4 +63,4 @@ More detailed documentation has been placed in the project repository.
 - Pressure Sensor: BMP280
 - STM32-FC Board (located in the hardware folder)
 
-![](https://github.com/Cyberdom123/quadcopter-dsp/blob/develop/photos/pcb.png)
+![](https://github.com/Cyberdom123/quadcopter---documentation/tree/main/img/pcb.png)
