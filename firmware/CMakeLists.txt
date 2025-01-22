@@ -30,6 +30,9 @@ include(gcc-arm-none-eabi.cmake)
 # Include functions file
 include(functions.cmake)
 
+# Include external projects
+include(external.cmake)
+
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
@@ -81,9 +84,7 @@ add_subdirectory(HAL_Flight_Controller/NRF24L01)
 
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    # PUBLIC
     ${MCU_FAMILY_LOWER}Hal
-    # PRIVATE
     mpu6050
     nrf24l01
 )
