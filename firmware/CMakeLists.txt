@@ -11,7 +11,21 @@ set(MCU_MODEL STM32F103XB)
 # set(MCU_FAMILY CACHE STRING STM32F1xx)
 # set(MCU_MODEL CACHE STRING STM32F103XB)
 
-set(LINKER_SCRIPT_NAME ${MCU_MODEL}_FLASH.ld)
+# Bootloader settings
+set(USE_BOOTLOADER ON CACHE BOOL "Use bootloader")
+set(MCU_BOOTLOADER STM32f103_msd_bootloader CACHE STRING "MCU bootloader")
+
+# Set the vector table address
+if(USE_BOOTLOADER)
+    set(USER_VECT_TAB_ADDRESS ON)
+endif()
+
+# Set the linker script
+if(USE_BOOTLOADER)
+    set(LINKER_SCRIPT_NAME ${MCU_MODEL}_FLASH_BOOTLOADER.ld)
+else()
+    set(LINKER_SCRIPT_NAME ${MCU_MODEL}_FLASH.ld)
+endif()
 
 string(TOLOWER ${MCU_MODEL} MCU_MODEL_LOWER)
 string(TOLOWER ${MCU_FAMILY} MCU_FAMILY_LOWER)
@@ -89,4 +103,5 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     nrf24l01
 )
 
-target_stlink_flash(${CMAKE_PROJECT_NAME})
+target_stlink_flash_app(${CMAKE_PROJECT_NAME})
+target_stlink_flash_bootloader(${MCU_BOOTLOADER})
