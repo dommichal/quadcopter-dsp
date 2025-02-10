@@ -144,7 +144,7 @@ HAL_StatusTypeDef MPU_init(MPU6050_STRUCT *mpu, MPU6050_config* cfg) {
 }
 
 HAL_StatusTypeDef MPU_measure_gyro_offset(MPU6050_STRUCT* mpu, uint16_t samples) {
-    FLOAT_TYPE gyro_data[3];
+    FLOAT_TYPE gyro_data[3] = {0};
     HAL_StatusTypeDef status = HAL_OK;
 
     for(uint16_t i = 0; i < samples; i++) {

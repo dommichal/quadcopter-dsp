@@ -100,7 +100,6 @@ void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin) {
         HAL_IMU_request_readout();
     }
 }
-
 /* USER CODE END 0 */
 
 /**

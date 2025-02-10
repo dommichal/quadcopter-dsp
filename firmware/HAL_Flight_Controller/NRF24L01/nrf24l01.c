@@ -243,7 +243,7 @@ HAL_StatusTypeDef NRF24L01_Send_Payload(NRF24L01_STRUCT *nrf24l01)
     TIM1_Delay_Microseconds(15);
     HAL_GPIO_WritePin(nrf24l01->nrf24l01GpioPort, nrf24l01->cePin, GPIO_PIN_RESET);
 
-    uint8_t data;
+    uint8_t data = 0;
     HAL_StatusTypeDef status = NRF24L01_Read_Byte(nrf24l01, NRF_STATUS, &data);
     if(status != HAL_OK){ return status; }                                    
     /* If max retransmissions occur clear MAX_RT flag to enable further communication */

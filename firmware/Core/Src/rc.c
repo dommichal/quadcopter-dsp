@@ -20,7 +20,7 @@
  *        -  msg[5] - Power off
  *        - (msg[6] - msg[8]) - free
  */
-void RC_Receive_Message(const uint8_t message[8], RC_t *rc) {
+void RadioControl_ReceiveMessage(const uint8_t message[8], RadioControl *rc) {
     int8_t *message_int = (int8_t *)message;
     
     if (message_int[0] > ACTIVATION_THRESHOLD_THRUST) {
@@ -61,9 +61,9 @@ void RC_Receive_Message(const uint8_t message[8], RC_t *rc) {
 
 uint16_t time_out_cnt = 0;
 
-void RC_Connection_Tick() { time_out_cnt = 0; }
+void RadioControl_ConnectionTick() { time_out_cnt = 0; }
 
-bool RC_Check_Connection() {
+bool RadioControl_CheckConnection() {
     HAL_Delay(1);
     if (time_out_cnt < MAX_CONTROLLER_TIMEOUT) {
         time_out_cnt++;
@@ -71,7 +71,7 @@ bool RC_Check_Connection() {
     return (time_out_cnt >= MAX_CONTROLLER_TIMEOUT);
 }
 
-void Lower_Altitude(RC_t *rc) {
+void RadioControl_DecreaseAltitude(RadioControl *rc) {
     rc->controls_inputs[roll] = 0;
     rc->controls_inputs[pitch] = 0;
     rc->controls_inputs[yaw] = 0;

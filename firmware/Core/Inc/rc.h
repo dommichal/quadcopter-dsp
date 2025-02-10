@@ -21,19 +21,19 @@ typedef enum Control_inputs_t {
     roll = 3
 } Control_Inputs_t;
 
-typedef union Telemetry_t {
+typedef union RadioTelemtery {
     float floatingPoint[6];
     uint8_t bytes[24];
-} Telemetry_t;
+} RadioTelemtery;
 
-typedef struct RC_t {
+typedef struct RadioControl {
     int8_t controls_inputs[4];
     bool power_on;
-} RC_t;
+} RadioControl;
 
-void RC_Receive_Message(const uint8_t message[8], RC_t *rc);
-void RC_Connection_Tick();
-bool RC_Check_Connection();
-void Lower_Altitude(RC_t *rc);
+void RadioControl_ReceiveMessage(const uint8_t message[8], RadioControl *rc);
+void RadioControl_ConnectionTick();
+bool RadioControl_CheckConnection();
+void RadioControl_DecreaseAltitude(RadioControl *rc);
 
 #endif // RC

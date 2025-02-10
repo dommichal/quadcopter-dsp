@@ -41,7 +41,8 @@ add_library(stm32f1xxHal STATIC
 )
 
 target_compile_definitions(stm32f1xxHal PUBLIC 
-	USE_HAL_DRIVER 
+	USE_HAL_DRIVER
+    USE_FULL_LL_DRIVER
 	STM32F103xB
     $<$<CONFIG:Debug>:DEBUG>
 )
