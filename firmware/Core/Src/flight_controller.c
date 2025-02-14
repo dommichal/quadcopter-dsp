@@ -1,6 +1,13 @@
 #include "flight_controller.h"
+
+#include "dsp/stabilizer.h"
+#include "dsp/angle_estimation.h"
+
 #include "serial_cli.h"
+// #include "flash_memory.h"
 #include "cli_commands.h"
+#include "radio_control.h"
+#include "serial_cli.h"
 
 #include "usbd_cdc_if.h"
 #include "main.h"
@@ -59,6 +66,14 @@ void FC_init() {
 
     SerialCLI_Init(&cli, &cliWrite);
     SerialCLI_RegisterAllCommands(&cli);
+
+    // uint32_t test = 0xFE;
+    // FlashMemory_SaveData(0x08007C00U, &test, 1);
+
+    // uint32_t read_test;
+    // FlashMemory_ReadData(0x08007C00U, &read_test, 1);
+
+    HAL_Delay(1000);
 
     // HAL_IMU_calibrate();
     HAL_RADIO_start_listening();

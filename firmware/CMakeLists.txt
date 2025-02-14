@@ -53,9 +53,7 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
-    # Core/Src/drivers/bmp280.c
-    # Core/Src/drivers/flash_memory.c
-    # Core/Src/drivers/ibus.c
+    Core/Src/drivers/flash_memory.c
     Core/Src/drivers/motors.c
     Core/Src/dsp/angle_estimation.c
     Core/Src/dsp/filters.c
@@ -63,8 +61,7 @@ add_executable(${CMAKE_PROJECT_NAME}
     Core/Src/dsp/stabilizer.c
     
     Core/Src/flight_controller.c
-    Core/Src/logger.c
-    Core/Src/rc.c
+    Core/Src/radio_control.c
     Core/Src/cli_commands.c
     Core/Src/main.c
 

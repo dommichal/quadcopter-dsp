@@ -7,11 +7,9 @@
 
 void firmwareUpdateCommand(SerialCLI *cli, int argc, const char **argv) {
     (void)argv;
-    if (1 != argc) {
-        SerialCLI_WriteString(cli, "Usage: firmware-update\r\n");
-        return;
-    }
-    SerialCLI_WriteString(cli, "Firmware update mode started.\r\n");
+    (void)argc;
+
+    SerialCLI_WriteString(cli, "Firmware update started.\r\n");
 
     MX_USB_DEVICE_DeInit();
     USB_DevDisconnect(USB); // disconnect USB device
@@ -25,26 +23,22 @@ void firmwareUpdateCommand(SerialCLI *cli, int argc, const char **argv) {
 
     // Store bootkey in RAM and reset
     // to force the bootloader to start
-    HAL_FLASH_Unlock();
     *((volatile uint32_t *)0x20004ffc) = 0x12345678; // same BOOTKEY as defined in Bootloader
-    HAL_FLASH_Lock();
 
     NVIC_SystemReset();
 }
 
 void calibrateCommand(SerialCLI *cli, int argc, const char **argv) {
     (void)argv;
-    if (1 == argc) {
-        SerialCLI_WriteString(cli, "Calibrating IMU...\r\n");
-        HAL_IMU_calibrate();
-        SerialCLI_WriteString(cli, "Calibration complete.\r\n");
-    } else {
-        SerialCLI_WriteString(cli, "Usage: calibrate\r\n");
-    }
+    (void)argc;
+
+    SerialCLI_WriteString(cli, "Calibrating IMU...\r\n");
+    HAL_IMU_calibrate();
+    SerialCLI_WriteString(cli, "Calibration complete.\r\n");
 }
 
 SerialCLI_CommandEntry commands[] = {
-    {firmwareUpdateCommand, "update", "Open the mass storage device for firmware update."},
+    {firmwareUpdateCommand, "update", "Update firmware in mass storage mode."},
     {calibrateCommand, "calibrate", "Calibrate the IMU."},
 };
 

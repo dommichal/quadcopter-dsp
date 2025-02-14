@@ -8,7 +8,7 @@
  *
  *
  */
-#include <rc.h>
+#include "radio_control.h"
 
 /**
  * @brief decode message

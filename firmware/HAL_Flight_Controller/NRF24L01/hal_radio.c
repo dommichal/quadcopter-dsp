@@ -66,7 +66,6 @@ void HAL_RADIO_receive_payload() {
 }
 
 void HAL_RADIO_write_telemetry_payload(const uint8_t *data, const uint8_t len) {
-  assert(len <= 24);
   assert(data != NULL);
-  memcpy(radio.telemetry, data, len);
+  memcpy(radio.telemetry, data, sizeof(radio.telemetry));
 }
