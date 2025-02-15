@@ -126,8 +126,8 @@ void Estimator_DetermineAngles(float angles[2], float angularRates[3], const flo
   Euler_ComputeAngularVelocities(angularRates, angles, gyro);
 
   #ifdef KALMAN
-  Kalman_Estimate(&kalmanPitch, &angles[PITCH], acc_angles[PITCH], degToRad(angularRates[X]));
-  Kalman_Estimate(&kalmanRoll, &angles[ROLL], acc_angles[ROLL], degToRad(angularRates[Y]));
+  Kalman_Estimate(&kalmanRoll, &angles[ROLL], acc_angles[ROLL], degToRad(angularRates[X]));
+  Kalman_Estimate(&kalmanPitch, &angles[PITCH], acc_angles[PITCH], degToRad(angularRates[Y]));
   #else
   angles[0] += degToRad(angularRates[0]) * complementartSampling;   
   angles[1] += degToRad(angularRates[1]) * complementartSampling;   
