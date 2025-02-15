@@ -15,7 +15,7 @@ enum{
 };
 
 // static IIR_filter_t iir;
-static pid_t roll_pid, pitch_pid, yaw_pid;
+static PIDController roll_pid, pitch_pid, yaw_pid;
 
 void Stabilizer_init(){
     // Initialize all pids sample times and max_values
@@ -68,7 +68,7 @@ void Stabilizer_init(){
 }
 
 /* TODO: check when to cast to int8, in motors or stabizler */
-void Stabilize(float angles[2], float angular_velocities[3], int8_t control_inputs[4]){
+void Stabilizer_Update(float angles[2], float angular_velocities[3], int8_t control_inputs[4]){
     float set_val[3];
     int8_t duty_cycles[3];
 

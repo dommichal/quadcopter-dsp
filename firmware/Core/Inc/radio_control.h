@@ -14,12 +14,12 @@
 
 #define MAX_CONTROLLER_TIMEOUT 700
 
-typedef enum Control_inputs_t {
-    thrust = 0,
-    pitch = 1,
-    yaw = 2,
-    roll = 3
-} Control_Inputs_t;
+enum {
+    THRUST = 0,
+    PITCH = 1,
+    YAW = 2,
+    ROLL = 3
+};
 
 typedef union RadioTelemtery {
     float floatingPoint[6];

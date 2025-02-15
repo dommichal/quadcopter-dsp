@@ -5,15 +5,15 @@
 #include "spi.h"
 #include "tim.h"
 
-#include <string.h>
 #include <stdint.h>
+#include <string.h>
 
 /* RF Power Select Enum */
 typedef enum {
-    RF_POWER_0 = 0x00U, //-18dBm
-    RF_POWER_1 = 0x01U, //-12dBm
-    RF_POWER_2 = 0x02U, //-6dBm
-    RF_POWER_3 = 0x03U  // 0dBm
+  RF_POWER_0 = 0x00U, //-18dBm
+  RF_POWER_1 = 0x01U, //-12dBm
+  RF_POWER_2 = 0x02U, //-6dBm
+  RF_POWER_3 = 0x03U  // 0dBm
 } RF_POWER_SEL;
 
 /* Address filed width Enum */
@@ -21,67 +21,88 @@ typedef enum { THREE_BYTES_ADDR = 0x01U, FOUR_BYTES_ADDR = 0x02U, FIVE_BYTES_ADD
 
 /* Air data Rate Enum */
 typedef enum {
-    ONE_MBPS_DATA_RATE = 0x00U, // 1Mbps
-    TWO_MBPS_DATA_RATE = 0x01U  // 2Mbps
+  ONE_MBPS_DATA_RATE = 0x00U, // 1Mbps
+  TWO_MBPS_DATA_RATE = 0x01U  // 2Mbps
 } AIR_DATA_RATE;
 
 /* RX_DR INTERRUPT ENUM */
-typedef enum { RX_DR_INT_SET = 0x00U, RX_DR_INT_RESET = 0x01U } NRF_RX_INTERRUPTS;
+typedef enum {
+  RX_DR_INT_SET = 0x00U,
+  RX_DR_INT_RESET = 0x01U,
+} NRF_RX_INTERRUPTS;
 
 /* TX_DS INTERRUPT ENUM */
-typedef enum { TX_DS_INT_SET = 0x00U, TX_DS_INT_RESET = 0x01U } NRF_TX_INTERRUPTS;
+typedef enum {
+  TX_DS_INT_SET = 0x00U,
+  TX_DS_INT_RESET = 0x01U,
+} NRF_TX_INTERRUPTS;
 
 /* MAX_RT INTERRUPT ENUM */
-typedef enum { MAX_RT_INT_SET = 0x00U, MAX_RT_INT_RESET = 0x01U } MAX_RT_INTERRUPTS;
+typedef enum {
+  MAX_RT_INT_SET = 0x00U,
+  MAX_RT_INT_RESET = 0x01U,
+} MAX_RT_INTERRUPTS;
 
 /* CRCO ENCODING SCHEME ENUM  */
-typedef enum { ONE_BYTE_ENCODING = 0X00U, TWO_BYTES_ENCODING = 0X04U } CRCO_ENCODING;
+typedef enum {
+  ONE_BYTE_ENCODING = 0X00U,
+  TWO_BYTES_ENCODING = 0X04U,
+} CRCO_ENCODING;
 
 /* EN_CRC  ENUM */
-typedef enum { EN_CRC_RESET = 0x00U, EN_CRC_SET = 0x01U } EN_CRC;
+typedef enum {
+  EN_CRC_RESET = 0x00U,
+  EN_CRC_SET = 0x01U,
+} EN_CRC;
 
 /* RX/TX Mode Enum */
-typedef enum { PTX = 0x00U, PRX = 0x01U } RX_TX_CONTROL;
+typedef enum {
+  PTX = 0x00U,
+  PRX = 0x01U,
+} RX_TX_CONTROL;
 
 /* LNA_HCURR Enum */
-typedef enum { LNA_HCURR_RESET = 0x00U, LNA_HCURR_SET = 0x01U } LNA_HCURR;
+typedef enum {
+  LNA_HCURR_RESET = 0x00U,
+  LNA_HCURR_SET = 0x01U,
+} LNA_HCURR;
 
 /* Transceiver struct */
 typedef struct {
-    SPI_HandleTypeDef *spiHandle;
+  SPI_HandleTypeDef *spiHandle;
 
-    GPIO_TypeDef *nrf24l01GpioPort;
-    uint16_t csnPin;
-    uint16_t cePin;
+  GPIO_TypeDef *nrf24l01GpioPort;
+  uint16_t csnPin;
+  uint16_t cePin;
 
-    /* DMA */
-    uint8_t payloadBuff[33];
-    uint8_t txBuff[33];
+  /* DMA */
+  uint8_t payloadBuff[33];
+  uint8_t txBuff[33];
 
-    uint8_t payloadFlag;
+  uint8_t payloadFlag;
 
-    /* PIPE Addr */
-    uint8_t pipeNum;
+  /* PIPE Addr */
+  uint8_t pipeNum;
 
 } NRF24L01_STRUCT;
 
 /* Transceiver Init Struct */
 typedef struct {
-    NRF_RX_INTERRUPTS rx_int;
-    NRF_TX_INTERRUPTS tx_int;
-    MAX_RT_INTERRUPTS max_rt_int;
+  NRF_RX_INTERRUPTS rx_int;
+  NRF_TX_INTERRUPTS tx_int;
+  MAX_RT_INTERRUPTS max_rt_int;
 
-    EN_CRC en_crc;
-    CRCO_ENCODING crco_enc;
-    RX_TX_CONTROL rx_tx_control;
-    RX_TX_ADDRESS_WIDTH rx_tx_addr_width;
-    LNA_HCURR lna_hcurr;
-    AIR_DATA_RATE data_rate;
-    RF_POWER_SEL power_sel;
+  EN_CRC en_crc;
+  CRCO_ENCODING crco_enc;
+  RX_TX_CONTROL rx_tx_control;
+  RX_TX_ADDRESS_WIDTH rx_tx_addr_width;
+  LNA_HCURR lna_hcurr;
+  AIR_DATA_RATE data_rate;
+  RF_POWER_SEL power_sel;
 
-    uint8_t re_transmission_delay;
-    uint8_t re_transmission_num;
-    uint8_t chanel;
+  uint8_t re_transmission_delay;
+  uint8_t re_transmission_num;
+  uint8_t chanel;
 } NRF24L01_CONFIG;
 
 /* Default NRF24L01 Config */
@@ -128,11 +149,34 @@ HAL_StatusTypeDef NRF24L01_Read_Payload(NRF24L01_STRUCT *nrf24l01, uint8_t *data
 
 HAL_StatusTypeDef NRF24L01_Get_Info(NRF24L01_STRUCT *nrf24l01);
 
+/**
+ * @brief Read payload using DMA
+ * Read payload with size of len from RX FIFO
+ * 
+ * @note this method uses hardware nrf24l01 CRC check
+ * 
+ * @param[in] nrf24l01 NRF24L01_STRUCT
+ * @param[in] len expected length of the payload
+ * 
+ * @return HAL_StatusTypeDef 
+ */
 HAL_StatusTypeDef NRF24L01_Read_PayloadDMA(NRF24L01_STRUCT *nrf24l01, uint8_t len);
 
+/**
+ * @brief Complete DMA payload read
+ * 
+ * @note this method uses hardware nrf24l01 CRC check
+ * 
+ * @param[in] nrf24l01 NRF24L01_STRUCT
+ * @param[out] data data buffer
+ * @param[in] len length of the data buffer
+ * 
+ *  @return HAL_StatusTypeDef 
+ */
 void NRF24L01_Read_PayloadDMA_Complete(NRF24L01_STRUCT *nrf24l01, uint8_t *data, uint8_t len);
 
 HAL_StatusTypeDef NRF24L01_Write_ACKN_Payload(NRF24L01_STRUCT *nrf24l01, uint8_t *data, uint8_t len);
+
 /* END OF MAIN FUNCTIONS */
 
 /* Memory Map */

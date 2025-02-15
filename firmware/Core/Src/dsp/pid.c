@@ -6,7 +6,7 @@
 #include <pid.h>
 
 
-void PID_init(pid_t *pid){
+void PID_init(PIDController *pid){
 
     pid->ki = pid->ki * pid->sampleTime * 0.5f;
     pid->kd = pid->kd * 2/(2*pid->tau + pid->sampleTime);
@@ -18,7 +18,7 @@ void PID_init(pid_t *pid){
     pid->lastDeriv = 0;
 }
 
-float PID_Calculate(pid_t *pid, float input, float target){
+float PID_Calculate(PIDController *pid, float input, float target){
 
     float error = target - input;
 

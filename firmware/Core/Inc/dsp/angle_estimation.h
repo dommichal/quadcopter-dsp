@@ -7,31 +7,58 @@
 #define degToRad(angleInDegrees) ((angleInDegrees) * 3.141592f / 180.0f)
 #define radToDeg(angleInRadians) ((angleInRadians) * 180.0f / 3.141592f)
 
-#define AX_OFFSET   0.05f
+#define AX_OFFSET 0.05f
 
+#ifndef COMPLEMENTARY
 #define KALMAN
+#endif
 
-typedef struct kalman_t
-{
-    float kalman_angle;
-    float kalman_gain;
-    float variance_prediction;    
-    float kalman_extrapolation_term;
+typedef struct {
+  float kalman_angle;
+  float kalman_gain;
+  float variancePrediction;
+  float extrapolationTerm;
 
-    float sampling_time;
-    float angular_velocity_variance;
-    float angle_variance;
-}kalman_t;
+  float sampling_time;
+  float angular_velocity_variance;
+  float angleVariance;
+} KalmanFilter;
 
+/**
+ * @brief Calculate fixed frame Euler roll and pitch
+ * @note Remap gyro angular velocity (mpu on pcb orientation)
+ *       gyro_x = -gyro_x;
+ */
+void Euler_ComputeAngles(float acc_buf[3], float angles[2]);
 
-void Calculate_Angles_acc(float acc_buf[3], float angles[2]);
-void Calculate_Angular_Velocities(float angle_change[3], float angles[2], const float gyro[3]);
-void Get_Complementary_Roll_Pitch(float angles[2], float acc_angles[2], float angle_change[3], float dt, float alpha);
+/**
+ * @brief calculates the rotational speed of Euler angles
+ * @note Remap gyro angular velocity (mpu on pcb orientation)
+ *       gyro_x = -gyro_x;
+ * @param angle_change Euler angular velocities
+ * @param angles current estimation of euler angles [roll, pitch, yaw]
+ * @param gyro gyro inputs [x, y, z]
+ */
+void Euler_ComputeAngularVelocities(float angle_change[3], float angles[2], const float gyro[3]);
 
-void Kalman_init(kalman_t *kalman);
-void Kalman_calculate(kalman_t *kalman, float *kalman_state, float measurement, float velocity);
+/**
+ * @brief estimates Euler angles using a complementary filter
+ */
+void Complementary_CalculateRollAndPitch(float angles[2], float acc_angles[2], float angle_change[3], float dt, float alpha);
 
-void Estimate_Angles_Init(float dt, float alpha, float tau);
-void Estimate_Angles(float angles[2], float angular_velocities[3], const float acc_buf[3], const float gyro_buf[3]);
+/**
+ * @brief one dimensional Kalman filter
+ */
+void Kalman_Init(KalmanFilter *kalman);
+
+void Kalman_Estimate(KalmanFilter *kalman, float *kalman_state, float measurement, float velocity);
+
+void Estimator_Init(float dt, float alpha, float tau);
+
+/**
+ * @brief Calculates Euler angles estimates using
+ *        1D Kalman or complementary filter
+ */
+void Estimator_DetermineAngles(float angles[2], float angular_velocities[3], const float acc_buf[3], const float gyro_buf[3]);
 
 #endif // ANGLE_ESTIMATION

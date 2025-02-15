@@ -47,7 +47,7 @@ void calibrateCommand(SerialCLI *cli, int argc, const char **argv) {
     if (NVM_SaveData(storage)) {
         SerialCLI_WriteString(cli, "Calibration saved.\r\n");
     } else {
-        SerialCLI_WriteString(cli, "Failed to save calibration.\r\n");
+        SerialCLI_WriteString(cli, "Failed.\r\n");
     }
 }
 

@@ -46,14 +46,14 @@ void IMU_conversion_complete_callback(const float *acc, const float *gyro) {
     static float angle_change[3];
     static float angles[3];
 
-    Estimate_Angles(angles, angle_change, acc, gyro);
-    Stabilize(angles, angle_change, rc.controls_inputs);
+    Estimator_DetermineAngles(angles, angle_change, acc, gyro);
+    Stabilizer_Update(angles, angle_change, rc.controls_inputs);
     Motors_Switch(rc.power_on);
 
     telemetry.floatingPoint[0] = radToDeg(angles[0]);
     telemetry.floatingPoint[1] = radToDeg(angles[1]);
-    telemetry.floatingPoint[2] = (float)rc.controls_inputs[thrust];
-    telemetry.floatingPoint[3] = (float)rc.controls_inputs[pitch];
+    telemetry.floatingPoint[2] = (float)rc.controls_inputs[THRUST];
+    telemetry.floatingPoint[3] = (float)rc.controls_inputs[PITCH];
 }
 
 void FC_init() {
@@ -62,7 +62,7 @@ void FC_init() {
 
     Stabilizer_init();
     const float dt = 0.001f, comp_alpha = 0.001f, iir_tau = 0.04f;
-    Estimate_Angles_Init(dt, comp_alpha, iir_tau);
+    Estimator_Init(dt, comp_alpha, iir_tau);
 
     HAL_RADIO_init(HAL_RADIO_receive_complete_callback,
                    HAL_RADIO_request_receive_callback);

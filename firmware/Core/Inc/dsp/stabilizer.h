@@ -24,6 +24,6 @@ void Stabilizer_init();
  * @param angular_velocities The array of current angular velocities (roll, pitch, and yaw) of the quadcopter.
  * @param control_inputs The array of control inputs (throttle, roll, pitch, and yaw) for the quadcopter.
  */
-void Stabilize(float angles[2], float angular_velocities[3], int8_t control_inputs[4]);
+void Stabilizer_Update(float angles[2], float angular_velocities[3], int8_t control_inputs[4]);
 
 #endif // STABILIZER

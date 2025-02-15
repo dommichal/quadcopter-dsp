@@ -24,30 +24,30 @@ void RadioControl_ReceiveMessage(const uint8_t message[8], RadioControl *rc) {
     int8_t *message_int = (int8_t *)message;
     
     if (message_int[0] > ACTIVATION_THRESHOLD_THRUST) {
-        rc->controls_inputs[thrust] = message_int[0];
+        rc->controls_inputs[THRUST] = message_int[0];
     } else {
-        rc->controls_inputs[thrust] = 10;
+        rc->controls_inputs[THRUST] = 10;
     }
 
     if (message_int[1] > ACTIVATION_THRESHOLD ||
         message_int[1] < -ACTIVATION_THRESHOLD) {
-        rc->controls_inputs[pitch] = message_int[1] * PITCH_ANGLE_SCALE;
+        rc->controls_inputs[PITCH] = message_int[1] * PITCH_ANGLE_SCALE;
     } else {
-        rc->controls_inputs[pitch] = 0;
+        rc->controls_inputs[PITCH] = 0;
     }
 
     if (message_int[2] > ACTIVATION_THRESHOLD ||
         message_int[2] < -ACTIVATION_THRESHOLD) {
-        rc->controls_inputs[yaw] = message_int[2] * YAW_ANGLE_SCALE;
+        rc->controls_inputs[YAW] = message_int[2] * YAW_ANGLE_SCALE;
     } else {
-        rc->controls_inputs[yaw] = 0;
+        rc->controls_inputs[YAW] = 0;
     }
 
     if (message_int[3] > YAW_ACTIVATION_THRESHOLD ||
         message_int[3] < -YAW_ACTIVATION_THRESHOLD) {
-        rc->controls_inputs[roll] = message_int[3] * ROLL_ANGLE_SCALE;
+        rc->controls_inputs[ROLL] = message_int[3] * ROLL_ANGLE_SCALE;
     } else {
-        rc->controls_inputs[roll] = 0;
+        rc->controls_inputs[ROLL] = 0;
     }
 
     if (message_int[4] == 1 && rc->power_on == false) {
@@ -72,11 +72,11 @@ bool RadioControl_CheckConnection() {
 }
 
 void RadioControl_DecreaseAltitude(RadioControl *rc) {
-    rc->controls_inputs[roll] = 0;
-    rc->controls_inputs[pitch] = 0;
-    rc->controls_inputs[yaw] = 0;
-    while (rc->controls_inputs[thrust] > 10) {
+    rc->controls_inputs[ROLL] = 0;
+    rc->controls_inputs[PITCH] = 0;
+    rc->controls_inputs[YAW] = 0;
+    while (rc->controls_inputs[THRUST] > 10) {
         HAL_Delay(800);
-        rc->controls_inputs[thrust]--;
+        rc->controls_inputs[THRUST]--;
     }
 }

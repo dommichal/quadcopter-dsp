@@ -59,13 +59,7 @@ bool NVM_SaveData(NVM_Storage *config) {
 }
 
 void NVM_Init(void) {
-  storage.imuCalibration.accOffset.x = persistentNvmStorage.imuCalibration.accOffset.x;
-  storage.imuCalibration.accOffset.y = persistentNvmStorage.imuCalibration.accOffset.y;
-  storage.imuCalibration.accOffset.z = persistentNvmStorage.imuCalibration.accOffset.z;
-  storage.imuCalibration.gyroOffset.x = persistentNvmStorage.imuCalibration.gyroOffset.x;
-  storage.imuCalibration.gyroOffset.y = persistentNvmStorage.imuCalibration.gyroOffset.y;
-  storage.imuCalibration.gyroOffset.z = persistentNvmStorage.imuCalibration.gyroOffset.z;
-  storage.checksum = persistentNvmStorage.checksum;
+  memcpy(&storage, (const void *)&persistentNvmStorage, sizeof(NVM_Storage));
 
   if (!NVM_ChecksumIsValid(&storage)) {
     memset(&storage, 0, sizeof(NVM_Storage));

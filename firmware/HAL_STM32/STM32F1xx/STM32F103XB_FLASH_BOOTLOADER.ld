@@ -63,7 +63,7 @@ MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
 FLASH (rx)     : ORIGIN = 0x8003400,  LENGTH = 50k
-NVM(rw)       : ORIGIN = 0x8010000, LENGTH = 1k
+NVM(rw)       : ORIGIN = 0x800FC00, LENGTH = 1k
 }
 
 /* Define output sections */
@@ -175,7 +175,7 @@ SECTIONS
   } >RAM
 
   /* Section for persistant data storage */
-  .nvm_section 0x8010000:
+  .nvm_section 0x800FC00:
   {
     KEEP(*(.nvm_section))
   } >NVM
