@@ -1,27 +1,26 @@
 /**
  * @file mpu6050.c
- * @author Kacper Filipek
+ * @author Kacper Filipek & Dominik Michalczyk
  * @brief 
  * @version 0.1
  * @date 2024-01-26
  */
+
 #include "mpu6050.h"
 
-static FLOAT_TYPE ACC_SCALE_FACTOR = 0.0;
-static FLOAT_TYPE GYRO_SCALE_FACTOR = 0.0;
+#include <assert.h>
+
+static float ACC_SCALE_FACTOR = 0.0;
+static float GYRO_SCALE_FACTOR = 0.0;
 
 static uint8_t mpu_acc_buf_raw[6];
 static uint8_t mpu_gyro_buf_raw[6];
 static uint8_t mpu_acc_gyro_buf_raw[14];
-static FLOAT_TYPE* mpu_acc_buffer;
-static FLOAT_TYPE* mpu_gyro_buffer;
-static FLOAT_TYPE mpu_gyro_offset[3] = {0.0, 0.0, 0.0};
-static FLOAT_TYPE mpu_acc_offset[3] = {0.0, 0.0, 0.0};
 
-extern bool mpu_acc_read_available;
-extern bool mpu_gyro_read_available;
+static float* mpu_acc_buffer;
+static float* mpu_gyro_buffer;
 
-MPU6050_config default_cfg = {
+MPU6050_Config default_cfg = {
     .sample_rate_divider = 0,
     .ext_sync_set = 0,
     .int_level = MPU_int_active_low,
@@ -48,16 +47,20 @@ MPU6050_config default_cfg = {
     .sig_cond_reset = false
 };
 
-MPU6050_config MPU_get_default_cfg(void) {
+MPU6050_Config MPU_GetDefaultConfiguration(void) {
     return default_cfg;
 }
 
-HAL_StatusTypeDef mpu6050_read_byte(MPU6050_STRUCT *mpu, uint8_t addr, uint8_t *data)
+HAL_StatusTypeDef mpu6050_read_byte(MPU6050_Device *mpu, uint8_t addr, uint8_t *data)
 {
     return HAL_I2C_Mem_Read(mpu->hi2c, MPU6050_ADDR<<1, addr, 1, data, 1, HAL_MAX_DELAY);
 }
 
-HAL_StatusTypeDef MPU_init(MPU6050_STRUCT *mpu, MPU6050_config* cfg) {
+HAL_StatusTypeDef MPU_Init(MPU6050_Device *mpu, MPU6050_Config* cfg, MPU6050_Calibration *calibration) {
+    assert(NULL != mpu);
+    assert(NULL != cfg);
+    assert(NULL != calibration);
+
     HAL_StatusTypeDef status = HAL_OK;
 
     mpu_acc_buffer = mpu->mpu_acc_buff;
@@ -95,8 +98,8 @@ HAL_StatusTypeDef MPU_init(MPU6050_STRUCT *mpu, MPU6050_config* cfg) {
                             i2c_buffer, 1,
                             HAL_MAX_DELAY);
 
-    status = MPU_set_acc_resolution(mpu, cfg->afs_sel);
-    status = MPU_set_gyro_resolution(mpu, cfg->fs_sel);
+    status = MPU_SetAccelerometerResolution(mpu, cfg->afs_sel);
+    status = MPU_SetGyroResolution(mpu, cfg->fs_sel);
 
     *i2c_buffer = (cfg->data_rdy_en    << DATA_RDY_EN_MASK)    |
                   (cfg->i2c_mst_int_en << I2C_MST_INT_EN_MASK) |
@@ -131,41 +134,42 @@ HAL_StatusTypeDef MPU_init(MPU6050_STRUCT *mpu, MPU6050_config* cfg) {
                             i2c_buffer, 1,
                             HAL_MAX_DELAY);
     
+    mpu->calibration = calibration;
 
     return status;
 }
 
-HAL_StatusTypeDef MPU_measure_gyro_offset(MPU6050_STRUCT* mpu, uint16_t samples) {
-    FLOAT_TYPE gyro_data[3] = {0};
+HAL_StatusTypeDef MPU_MeasureGyroOffset(MPU6050_Device* mpu, MPU6050_Offset *offset, uint16_t samples) {
+    float gyro_data[3] = {0};
     HAL_StatusTypeDef status = HAL_OK;
 
     for(uint16_t i = 0; i < samples; i++) {
-        status = MPU_read_gyro(mpu, gyro_data);
+        status = MPU_ReadGyro(mpu, gyro_data);
         if (HAL_OK == status) {
-            mpu_gyro_offset[0] += gyro_data[0] / samples;
-            mpu_gyro_offset[1] += gyro_data[1] / samples;
-            mpu_gyro_offset[2] += gyro_data[2] / samples;
+            offset->x += gyro_data[0] / samples;
+            offset->y += gyro_data[1] / samples;
+            offset->z += gyro_data[2] / samples;
         }
     }
     return status;
 }
 
-HAL_StatusTypeDef MPU_measure_acc_offset(MPU6050_STRUCT* mpu, uint16_t samples) {
-    FLOAT_TYPE acc_data[3];
+HAL_StatusTypeDef MPU_MeasureAccelerometerOffset(MPU6050_Device* mpu, MPU6050_Offset *offset, uint16_t samples) {
+    float acc_data[3];
     HAL_StatusTypeDef status = HAL_OK;
 
     for(uint16_t i = 0; i < samples; i++) {
-        status = MPU_read_acc(mpu, acc_data);
+        status = MPU_ReadAcceleration(mpu, acc_data);
         if(HAL_OK == status) {
-            mpu_acc_offset[0] += acc_data[0] / samples;
-            mpu_acc_offset[1] += acc_data[1] / samples;
-            mpu_acc_offset[2] += (acc_data[2] - 1) / samples;
+            offset->x += acc_data[0] / samples;
+            offset->y += acc_data[1] / samples;
+            offset->z += (acc_data[2] - 1) / samples;
         }
     }
     return status;
 }
 
-HAL_StatusTypeDef MPU_clear_int(MPU6050_STRUCT *mpu){
+HAL_StatusTypeDef MPU_ClearInterrupt(MPU6050_Device *mpu){
 
     uint8_t i2c_read_buffer[1];
     return HAL_I2C_Mem_Read(mpu->hi2c, MPU6050_ADDR << 1,
@@ -175,7 +179,7 @@ HAL_StatusTypeDef MPU_clear_int(MPU6050_STRUCT *mpu){
 
 } 
 
-HAL_StatusTypeDef MPU_read_acc(MPU6050_STRUCT *mpu, FLOAT_TYPE output[]) {
+HAL_StatusTypeDef MPU_ReadAcceleration(MPU6050_Device *mpu, float output[]) {
     HAL_StatusTypeDef status;
     uint8_t i2c_buffer[6];
 
@@ -191,7 +195,7 @@ HAL_StatusTypeDef MPU_read_acc(MPU6050_STRUCT *mpu, FLOAT_TYPE output[]) {
     return status;
 }
 
-HAL_StatusTypeDef MPU_read_gyro(MPU6050_STRUCT *mpu, FLOAT_TYPE output[]) {
+HAL_StatusTypeDef MPU_ReadGyro(MPU6050_Device *mpu, float output[]) {
     HAL_StatusTypeDef status;
     uint8_t i2c_buffer[6];
 
@@ -207,7 +211,7 @@ HAL_StatusTypeDef MPU_read_gyro(MPU6050_STRUCT *mpu, FLOAT_TYPE output[]) {
     return status;
 }
 
-HAL_StatusTypeDef MPU_set_acc_resolution(MPU6050_STRUCT *mpu, acc_range_t range) {
+HAL_StatusTypeDef MPU_SetAccelerometerResolution(MPU6050_Device *mpu, acc_range_t range) {
     HAL_StatusTypeDef status;
 
     uint8_t i2c_buffer[1] = {0};
@@ -224,7 +228,7 @@ HAL_StatusTypeDef MPU_set_acc_resolution(MPU6050_STRUCT *mpu, acc_range_t range)
     return status;
 }
 
-HAL_StatusTypeDef MPU_set_gyro_resolution(MPU6050_STRUCT *mpu, gyro_range_t range) {
+HAL_StatusTypeDef MPU_SetGyroResolution(MPU6050_Device *mpu, gyro_range_t range) {
     HAL_StatusTypeDef status;
 
     uint8_t i2c_buffer[1] = {0};
@@ -247,39 +251,47 @@ HAL_StatusTypeDef MPU_set_gyro_resolution(MPU6050_STRUCT *mpu, gyro_range_t rang
 }
 
 
-HAL_StatusTypeDef MPU_read_acc_DMA(MPU6050_STRUCT *mpu) {
+HAL_StatusTypeDef MPU_ReadAccelerationDMA(MPU6050_Device *mpu) {
     mpu->acc_busy = true;
     return HAL_I2C_Mem_Read_DMA(mpu->hi2c, MPU6050_ADDR << 1,
                             ACC_REG_START, 1,
                             mpu_acc_buf_raw, 6);
 }
 
-HAL_StatusTypeDef MPU_read_acc_DMA_complete(MPU6050_STRUCT *mpu) {
+HAL_StatusTypeDef MPU_ReadAccelerationDMAComplete(MPU6050_Device *mpu) {
+    float mpu_acc_offset[3] = {mpu->calibration->accOffset.x,
+                               mpu->calibration->accOffset.y,
+                               mpu->calibration->accOffset.z};
+
     for(uint8_t i = 0; i < 3; i++) {
-        mpu_acc_buffer[i] = ACC_SCALE_FACTOR * (int16_t)((mpu_acc_buf_raw[2 * i] << 8) | mpu_acc_buf_raw[2 * i + 1]);
+        mpu_acc_buffer[i] = ACC_SCALE_FACTOR * (int16_t)((mpu_acc_buf_raw[2 * i] << 8) | mpu_acc_buf_raw[2 * i + 1]) - mpu_acc_offset[i];
     }
     mpu->acc_busy = false;
-    return MPU_clear_int(mpu);
+    return MPU_ClearInterrupt(mpu);
 }
 
-HAL_StatusTypeDef MPU_read_gyro_DMA(MPU6050_STRUCT *mpu) {
+HAL_StatusTypeDef MPU_ReadGryroDMA(MPU6050_Device *mpu) {
     mpu->gyro_busy = true;
     return HAL_I2C_Mem_Read_DMA(mpu->hi2c, MPU6050_ADDR << 1,
                             GYRO_REG_START, 1,
                             mpu_gyro_buf_raw, 6);
 }
 
-HAL_StatusTypeDef MPU_read_gyro_DMA_complete(MPU6050_STRUCT *mpu) {
+HAL_StatusTypeDef MPU_ReadGyroDMAComplete(MPU6050_Device *mpu) {
+    float mpu_gyro_offset[3] = {mpu->calibration->gyroOffset.x,
+                                mpu->calibration->gyroOffset.y,
+                                mpu->calibration->gyroOffset.z};
+
     for(uint8_t i = 0; i < 3; i++) {
         mpu_gyro_buffer[i] = GYRO_SCALE_FACTOR 
                            * (int16_t)((mpu_gyro_buf_raw[2 * i] << 8) | mpu_gyro_buf_raw[2 * i + 1])
                            - mpu_gyro_offset[i];
     }
     mpu->gyro_busy = false;
-    return MPU_clear_int(mpu);
+    return MPU_ClearInterrupt(mpu);
 }
 
-HAL_StatusTypeDef MPU_read_acc_gyro_DMA(MPU6050_STRUCT *mpu) {
+HAL_StatusTypeDef MPU_ReadAccGyroDMA(MPU6050_Device *mpu) {
     mpu->gyro_busy = true;
     mpu->acc_busy = true;
     return HAL_I2C_Mem_Read_DMA(mpu->hi2c, MPU6050_ADDR << 1,
@@ -287,16 +299,24 @@ HAL_StatusTypeDef MPU_read_acc_gyro_DMA(MPU6050_STRUCT *mpu) {
                             mpu_acc_gyro_buf_raw, 14);
 }
 
-HAL_StatusTypeDef MPU_read_acc_gyro_DMA_complete(MPU6050_STRUCT *mpu) {
+HAL_StatusTypeDef MPU_ReadAccGyroDMAComplete(MPU6050_Device *mpu) {
+    float acc_offset[3] = {mpu->calibration->accOffset.x,
+                           mpu->calibration->accOffset.y,
+                           mpu->calibration->accOffset.z};
+
+    float gyro_offset[3] = {mpu->calibration->gyroOffset.x,
+                            mpu->calibration->gyroOffset.y,
+                            mpu->calibration->gyroOffset.z};
+
     for(uint8_t i = 0; i < 3; i++) {
         mpu_acc_buffer[i] = ACC_SCALE_FACTOR * (int16_t)((mpu_acc_gyro_buf_raw[2 * i] << 8) |
-                                                          mpu_acc_gyro_buf_raw[2 * i + 1]) - mpu_acc_offset[i];
+                                                          mpu_acc_gyro_buf_raw[2 * i + 1]) - acc_offset[i];
     }
     for(uint8_t i = 0; i < 3; i++) {
         mpu_gyro_buffer[i] = GYRO_SCALE_FACTOR * (int16_t)((mpu_acc_gyro_buf_raw[8 + 2 * i] << 8) |
-                                                            mpu_acc_gyro_buf_raw[8 + 2 * i + 1]) - mpu_gyro_offset[i];
+                                                            mpu_acc_gyro_buf_raw[8 + 2 * i + 1]) - gyro_offset[i];
     }
     mpu->acc_busy = false;
     mpu->acc_busy = false;
-    return MPU_clear_int(mpu);
+    return MPU_ClearInterrupt(mpu);
 }

@@ -4,6 +4,7 @@
 
 #include "hal_imu.h"
 #include "usb_device.h"
+#include "nvm.h"
 
 void firmwareUpdateCommand(SerialCLI *cli, int argc, const char **argv) {
     (void)argv;
@@ -33,13 +34,26 @@ void calibrateCommand(SerialCLI *cli, int argc, const char **argv) {
     (void)argc;
 
     SerialCLI_WriteString(cli, "Calibrating IMU...\r\n");
-    HAL_IMU_calibrate();
-    SerialCLI_WriteString(cli, "Calibration complete.\r\n");
+
+    NVM_Storage *storage = NVM_GetStorage();
+    HAL_IMU_Calibration *calibration =  &storage->imuCalibration;
+    
+    if (NULL == storage) {
+        return;
+    }
+
+    HAL_IMU_calibrate(calibration);
+
+    if (NVM_SaveData(storage)) {
+        SerialCLI_WriteString(cli, "Calibration saved.\r\n");
+    } else {
+        SerialCLI_WriteString(cli, "Failed to save calibration.\r\n");
+    }
 }
 
 SerialCLI_CommandEntry commands[] = {
     {firmwareUpdateCommand, "update", "Update firmware in mass storage mode."},
-    {calibrateCommand, "calibrate", "Calibrate the IMU."},
+    {calibrateCommand, "calibrate", "Calibrate IMU sensors."}
 };
 
 enum {

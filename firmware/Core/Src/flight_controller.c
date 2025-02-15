@@ -4,9 +4,9 @@
 #include "dsp/angle_estimation.h"
 
 #include "serial_cli.h"
-// #include "flash_memory.h"
 #include "cli_commands.h"
 #include "radio_control.h"
+#include "nvm.h"
 #include "serial_cli.h"
 
 #include "usbd_cdc_if.h"
@@ -15,6 +15,7 @@
 static RadioControl rc;
 static RadioTelemtery telemetry;
 static SerialCLI cli;
+static NVM_Storage *storage;
 
 void CDC_ReceiveCallBack(uint8_t *Buf, uint32_t Len) {
     SerialCLI_Read(&cli, (char *)Buf, Len);
@@ -56,26 +57,20 @@ void IMU_conversion_complete_callback(const float *acc, const float *gyro) {
 }
 
 void FC_init() {
+    NVM_Init();
+    storage = NVM_GetStorage();
+
     Stabilizer_init();
     const float dt = 0.001f, comp_alpha = 0.001f, iir_tau = 0.04f;
     Estimate_Angles_Init(dt, comp_alpha, iir_tau);
 
     HAL_RADIO_init(HAL_RADIO_receive_complete_callback,
                    HAL_RADIO_request_receive_callback);
-    HAL_IMU_init(IMU_conversion_complete_callback);
+    HAL_IMU_init(IMU_conversion_complete_callback, &storage->imuCalibration);
 
     SerialCLI_Init(&cli, &cliWrite);
     SerialCLI_RegisterAllCommands(&cli);
 
-    // uint32_t test = 0xFE;
-    // FlashMemory_SaveData(0x08007C00U, &test, 1);
-
-    // uint32_t read_test;
-    // FlashMemory_ReadData(0x08007C00U, &read_test, 1);
-
-    HAL_Delay(1000);
-
-    // HAL_IMU_calibrate();
     HAL_RADIO_start_listening();
     HAL_IMU_start_conversion();
 }
@@ -86,9 +81,10 @@ void FC_deinit() {
 }
 
 void FC_proc() {
-    SerialCLI_Process(&cli);
     if (RadioControl_CheckConnection()) {
         HAL_GPIO_WritePin(STATUS_LED_GPIO_Port, STATUS_LED_Pin, GPIO_PIN_RESET);
         RadioControl_DecreaseAltitude(&rc);
+        
+        SerialCLI_Process(&cli);
     }
 }

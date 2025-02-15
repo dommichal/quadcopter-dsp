@@ -1,7 +1,7 @@
 /**
  * @file imu.h
  * @author Dominik Michalczyk
- * 
+ *
  * IMU module platform independent interface.
  */
 
@@ -12,17 +12,27 @@
 extern "C" {
 #endif
 
-
 #include <stdbool.h>
 
 #define HAL_IMU_INTERFACE_I2C
 
-typedef void (*HAL_IMU_conversion_complete_callback_t)(const float* acc, const float* gyro);
+typedef struct {
+  float x;
+  float y;
+  float z;
+} HAL_IMU_Offset;
 
-void HAL_IMU_init(HAL_IMU_conversion_complete_callback_t imu_readout_callback);
+typedef struct __attribute__((packed)) {
+  HAL_IMU_Offset gyroOffset;
+  HAL_IMU_Offset accOffset;
+} HAL_IMU_Calibration;
+
+typedef void (*HAL_IMU_conversion_complete_callback_t)(const float *acc, const float *gyro);
+
+void HAL_IMU_init(HAL_IMU_conversion_complete_callback_t imu_readout_callback, HAL_IMU_Calibration *calibration);
 void HAL_IMU_deinit(void);
+void HAL_IMU_calibrate(HAL_IMU_Calibration *calibration);
 void HAL_IMU_proc(void);
-void HAL_IMU_calibrate(void);
 void HAL_IMU_start_conversion(void);
 void HAL_IMU_request_readout(void);
 void HAL_IMU_readout(void);

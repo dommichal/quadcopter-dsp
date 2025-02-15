@@ -53,7 +53,7 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
-    Core/Src/drivers/flash_memory.c
+    Core/Src/nvm.c
     Core/Src/drivers/motors.c
     Core/Src/dsp/angle_estimation.c
     Core/Src/dsp/filters.c
@@ -94,6 +94,12 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
     nrf24l01
     serial_cli
 )
+
+if(MCU_MODEL STREQUAL "STM32F103XB")
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
+        NVM_ADDRESS=0x0800FC00
+    )
+endif()
 
 # Create Intel HEX file
 add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
