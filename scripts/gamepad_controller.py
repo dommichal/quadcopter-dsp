@@ -106,7 +106,7 @@ class XboxController(object):
                     self.UpDPad = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY4':
                     self.DownDPad = event.state
-
+            time.sleep(0.005)
 
 if __name__ == '__main__':
     joy = XboxController()
@@ -117,3 +117,4 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print(" Nara")
             exit()
+        time.sleep(0.005)

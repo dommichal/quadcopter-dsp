@@ -51,9 +51,30 @@ void calibrateCommand(SerialCLI *cli, int argc, const char **argv) {
     }
 }
 
+void trimCommand(SerialCLI *cli, int argc, const char **argv) {
+    NVM_Storage *storage = NVM_GetStorage();
+    if (NULL == storage) {
+        return;
+    }
+
+    if (argc < 3) {
+        SerialCLI_WriteString(cli, "Usage: trim <roll> <pitch>\r\n");
+        SerialCLI_WriteString(cli, "Current settings: roll %d, pitch %d\r\n", storage->trim.roll, storage->trim.pitch);
+        return;
+    }
+
+    storage->trim.roll = atoi(argv[1]);
+    storage->trim.pitch = atoi(argv[2]);
+
+    if (NVM_SaveData(storage)) {
+        SerialCLI_WriteString(cli, "Saved: roll %d, pitch %d\r\n", storage->trim.roll, storage->trim.pitch);
+    }
+}
+
 SerialCLI_CommandEntry commands[] = {
-    {firmwareUpdateCommand, "update", "Update firmware in mass storage mode."},
-    {calibrateCommand, "calibrate", "Calibrate IMU sensors."}
+    {firmwareUpdateCommand, "update", "DFU in mass storage mode."},
+    {calibrateCommand, "calibrate", "Calibrate IMU sensors."},
+    {trimCommand, "trim", "Set trim of roll and pitch angles."},
 };
 
 enum {

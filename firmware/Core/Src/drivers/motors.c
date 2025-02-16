@@ -14,11 +14,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-void Motors_Run(int8_t thrust, int8_t yaw, int8_t pitch, int8_t roll, bool power_on){
-    Motors_SetPWR(thrust, yaw, pitch, roll);
-    Motors_Switch(power_on);
-}
-
 void Motors_Switch(bool power_on){
   if(power_on){
     //Start all PWM chanels
@@ -35,14 +30,14 @@ void Motors_Switch(bool power_on){
   }
 }
 
-void Motors_SetPWR(uint8_t thrust, int8_t yaw, int8_t pitch, int8_t roll)
+void Motors_SetPWR(uint8_t thrust, float yaw, float pitch, float roll)
 {
   //Motor 1 PWM duty cycle
-  TIM2->CCR1 = THRUST_CONST * thrust - PITCH_CONST * pitch + YAW_CONST * yaw - ROLL_CONST * roll;
+  TIM2->CCR1 = (uint32_t) (THRUST_CONST * thrust - PITCH_CONST * pitch + YAW_CONST * yaw - ROLL_CONST * roll);
   //Motor 2 PWM duty cycle
-  TIM2->CCR2 = THRUST_CONST * thrust + PITCH_CONST * pitch - YAW_CONST * yaw - ROLL_CONST * roll;
+  TIM2->CCR2 = (uint32_t) (THRUST_CONST * thrust + PITCH_CONST * pitch - YAW_CONST * yaw - ROLL_CONST * roll);
   //Motor 3 PWM duty cycle
-  TIM2->CCR3 = THRUST_CONST * thrust + PITCH_CONST * pitch + YAW_CONST * yaw + ROLL_CONST * roll;
+  TIM2->CCR3 = (uint32_t) (THRUST_CONST * thrust + PITCH_CONST * pitch + YAW_CONST * yaw + ROLL_CONST * roll);
   //Motor 4 PWM duty cycle
-  TIM2->CCR4 = THRUST_CONST * thrust - PITCH_CONST * pitch - YAW_CONST * yaw + ROLL_CONST * roll;
+  TIM2->CCR4 = (uint32_t) (THRUST_CONST * thrust - PITCH_CONST * pitch - YAW_CONST * yaw + ROLL_CONST * roll);
 }

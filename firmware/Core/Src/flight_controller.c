@@ -3,6 +3,8 @@
 #include "dsp/angle_estimation.h"
 #include "dsp/stabilizer.h"
 
+#include "drivers/motors.h"
+
 #include "cli_commands.h"
 #include "nvm.h"
 #include "radio_control.h"
@@ -15,6 +17,9 @@ static RadioControl rc;
 static RadioTelemtery telemetry;
 static SerialCLI cli;
 static NVM_Storage *storage;
+
+static float angle_change[3];
+static float angles[3];
 
 void CDC_ReceiveCallBack(uint8_t *Buf, uint32_t Len) { SerialCLI_Read(&cli, (char *)Buf, Len); }
 
@@ -37,8 +42,6 @@ void HAL_RADIO_receive_complete_callback(const uint8_t *packet, uint8_t packet_l
 }
 
 void IMU_conversion_complete_callback(const float *acc, const float *gyro) {
-  static float angle_change[3];
-  static float angles[3];
   HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_SET);
 
   Estimator_DetermineAngles(angles, angle_change, acc, gyro);
@@ -57,7 +60,7 @@ void FC_init() {
   NVM_Init();
   storage = NVM_GetStorage();
 
-  Stabilizer_init();
+  Stabilizer_init(&storage->trim);
   const float dt = 0.001f, comp_alpha = 0.001f, iir_tau = 0.04f;
   Estimator_Init(dt, comp_alpha, iir_tau);
 

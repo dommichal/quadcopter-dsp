@@ -76,6 +76,15 @@ static KalmanFilter kalmanRoll;
 static IIR_filter_t iir;
 static float complementartSampling, filterAlpha;
 
+static float filter_acc_x_in[2]  = {0};
+static float filter_acc_x_out[2] = {0};
+
+static float filter_acc_y_in[2]  = {0};
+static float filter_acc_y_out[2] = {0};
+
+static float filter_acc_z_in[2]  = {0};
+static float filter_acc_z_out[2] = {0};
+
 void Estimator_Init(float dt, float alpha, float tau){
   complementartSampling = dt;
   filterAlpha = alpha;
@@ -98,15 +107,6 @@ void Estimator_Init(float dt, float alpha, float tau){
 }
 
 void Estimator_DetermineAngles(float angles[2], float angularRates[3], const float acceleration[3], const float gyro[3]){
-  static float filter_acc_x_in[2]  = {0};
-  static float filter_acc_x_out[2] = {0};
-
-  static float filter_acc_y_in[2]  = {0};
-  static float filter_acc_y_out[2] = {0};
-
-  static float filter_acc_z_in[2]  = {0};
-  static float filter_acc_z_out[2] = {0};
-
   float acc_angles[2];
   float filtered_acc[3];
 
