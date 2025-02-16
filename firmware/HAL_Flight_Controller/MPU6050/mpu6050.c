@@ -133,6 +133,10 @@ HAL_StatusTypeDef MPU_MeasureGyroOffset(MPU6050_Device* mpu, MPU6050_Offset *off
     float gyro_data[3] = {0};
     HAL_StatusTypeDef status = HAL_OK;
 
+    offset->x = 0;
+    offset->y = 0;
+    offset->z = 0;
+
     for(uint16_t i = 0; i < samples; i++) {
         status = MPU_ReadGyro(mpu, gyro_data);
         if (HAL_OK == status) {
@@ -147,6 +151,10 @@ HAL_StatusTypeDef MPU_MeasureGyroOffset(MPU6050_Device* mpu, MPU6050_Offset *off
 HAL_StatusTypeDef MPU_MeasureAccelerometerOffset(MPU6050_Device* mpu, MPU6050_Offset *offset, uint16_t samples) {
     float acc_data[3];
     HAL_StatusTypeDef status = HAL_OK;
+
+    offset->x = 0;
+    offset->y = 0;
+    offset->z = 0;
 
     for(uint16_t i = 0; i < samples; i++) {
         status = MPU_ReadAcceleration(mpu, acc_data);

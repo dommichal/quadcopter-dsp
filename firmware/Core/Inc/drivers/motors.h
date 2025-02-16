@@ -5,7 +5,7 @@
 #include <stdint.h>
 
 #define THRUST_CONST 10
-#define YAW_CONST 0.7
+#define YAW_CONST 1
 #define PITCH_CONST 4.7
 #define ROLL_CONST 4.7
 

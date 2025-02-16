@@ -65,7 +65,7 @@ void Stabilizer_init(Stabilizer_Trim *trimSettings) {
 
     //yaw pid
     yaw_pid.tau =  0.008f;  // 20Hz cutoff freq
-    yaw_pid.kp  = -2.0f;
+    yaw_pid.kp  =  2.0f;
     yaw_pid.ki  =  0.0f;
     yaw_pid.kd  =  0.0f;
 
@@ -79,7 +79,6 @@ void Stabilizer_init(Stabilizer_Trim *trimSettings) {
     PID_init(&yaw_pid);
 }
 
-/* TODO: check when to cast to int8, in motors or stabizler */
 void Stabilizer_Update(float angles[2], float angular_velocities[3], int8_t control_inputs[4]){
     float set_val[3];
     float duty_cycles[3];

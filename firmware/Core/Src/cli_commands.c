@@ -42,6 +42,8 @@ void calibrateCommand(SerialCLI *cli, int argc, const char **argv) {
         return;
     }
 
+    HAL_IMU_stop_conversion();
+    
     HAL_IMU_calibrate(calibration);
 
     if (NVM_SaveData(storage)) {
@@ -49,6 +51,8 @@ void calibrateCommand(SerialCLI *cli, int argc, const char **argv) {
     } else {
         SerialCLI_WriteString(cli, "Failed.\r\n");
     }
+
+    HAL_IMU_start_conversion();
 }
 
 void trimCommand(SerialCLI *cli, int argc, const char **argv) {

@@ -12,8 +12,8 @@
 #include <assert.h>
 
 enum {
-  IMU_GYRO_CALIBRATION_SAMPLES = 10000,
-  IMU_ACC_CALIBRATION_SAMPLES = 15000
+  IMU_GYRO_CALIBRATION_SAMPLES = 20000,
+  IMU_ACC_CALIBRATION_SAMPLES = 20000,
 };
 
 typedef struct {
@@ -21,6 +21,7 @@ typedef struct {
   float acc[3];
   float gyro[3];
   MPU6050_Device mpu;
+  bool conversion_enabled;
 } IMU_Device;
 
 static IMU_Device imu;
@@ -33,22 +34,30 @@ void HAL_IMU_init(HAL_IMU_OnConversionComplete imu_readout_callback, HAL_IMU_Cal
   assert(NULL != calibration);
 
   imu.mpu.hi2c = &hi2c1;
+  imu.conversion_enabled = false;
+
   MPU6050_Config mpu_config = MPU_GetDefaultConfiguration();
 
-  MPU_Init(&imu.mpu, imu.acc, imu.gyro, &mpu_config, (MPU6050_Calibration*)calibration);
+  MPU_Init(&imu.mpu, imu.acc, imu.gyro, &mpu_config, (MPU6050_Calibration *)calibration);
 
   imu.imu_readout_callback = imu_readout_callback;
+
 }
 
 void HAL_IMU_deinit() {} // Stub
 
 void HAL_IMU_proc() {} // Stub
 
-void HAL_IMU_start_conversion() { MPU_ClearInterrupt(&imu.mpu); }
+void HAL_IMU_start_conversion() {
+  MPU_ClearInterrupt(&imu.mpu);
+  imu.conversion_enabled = true;
+}
+
+void HAL_IMU_stop_conversion() { MPU_ClearInterrupt(&imu.mpu); }
 
 void HAL_IMU_calibrate(HAL_IMU_Calibration *calibration) {
-  MPU6050_Offset *gyro_offset = (MPU6050_Offset*)&calibration->gyroOffset;
-  MPU6050_Offset *acc_offset = (MPU6050_Offset*)&calibration->accOffset; 
+  MPU6050_Offset *gyro_offset = (MPU6050_Offset *)&calibration->gyroOffset;
+  MPU6050_Offset *acc_offset = (MPU6050_Offset *)&calibration->accOffset;
   MPU_MeasureAccelerometerOffset(&imu.mpu, acc_offset, IMU_ACC_CALIBRATION_SAMPLES);
   MPU_MeasureGyroOffset(&imu.mpu, gyro_offset, IMU_GYRO_CALIBRATION_SAMPLES);
 }
@@ -56,6 +65,10 @@ void HAL_IMU_calibrate(HAL_IMU_Calibration *calibration) {
 void HAL_IMU_request_readout() { MPU_ReadAccGyroDMA(&imu.mpu); }
 
 void HAL_IMU_readout() {
+  if (!imu.conversion_enabled) {
+    return;
+  }
+
   MPU_ReadAccGyroDMAComplete(&imu.mpu);
   imu.imu_readout_callback(imu.acc, imu.gyro);
 }

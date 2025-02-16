@@ -34,6 +34,7 @@ void HAL_IMU_deinit(void);
 void HAL_IMU_calibrate(HAL_IMU_Calibration *calibration);
 void HAL_IMU_proc(void);
 void HAL_IMU_start_conversion(void);
+void HAL_IMU_stop_conversion();
 void HAL_IMU_request_readout(void);
 void HAL_IMU_readout(void);
 
