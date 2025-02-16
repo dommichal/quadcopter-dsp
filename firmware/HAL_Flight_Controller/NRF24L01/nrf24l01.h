@@ -17,7 +17,11 @@ typedef enum {
 } RF_POWER_SEL;
 
 /* Address filed width Enum */
-typedef enum { THREE_BYTES_ADDR = 0x01U, FOUR_BYTES_ADDR = 0x02U, FIVE_BYTES_ADDR = 0x03U } RX_TX_ADDRESS_WIDTH;
+typedef enum {
+  THREE_BYTES_ADDR = 0x01U,
+  FOUR_BYTES_ADDR = 0x02U,
+  FIVE_BYTES_ADDR = 0x03U,
+} RX_TX_ADDRESS_WIDTH;
 
 /* Air data Rate Enum */
 typedef enum {
@@ -152,26 +156,26 @@ HAL_StatusTypeDef NRF24L01_Get_Info(NRF24L01_STRUCT *nrf24l01);
 /**
  * @brief Read payload using DMA
  * Read payload with size of len from RX FIFO
- * 
+ *
  * @note this method uses hardware nrf24l01 CRC check
- * 
+ *
  * @param[in] nrf24l01 NRF24L01_STRUCT
  * @param[in] len expected length of the payload
- * 
- * @return HAL_StatusTypeDef 
+ *
+ * @return HAL_StatusTypeDef
  */
 HAL_StatusTypeDef NRF24L01_Read_PayloadDMA(NRF24L01_STRUCT *nrf24l01, uint8_t len);
 
 /**
  * @brief Complete DMA payload read
- * 
+ *
  * @note this method uses hardware nrf24l01 CRC check
- * 
+ *
  * @param[in] nrf24l01 NRF24L01_STRUCT
  * @param[out] data data buffer
  * @param[in] len length of the data buffer
- * 
- *  @return HAL_StatusTypeDef 
+ *
+ *  @return HAL_StatusTypeDef
  */
 void NRF24L01_Read_PayloadDMA_Complete(NRF24L01_STRUCT *nrf24l01, uint8_t *data, uint8_t len);
 

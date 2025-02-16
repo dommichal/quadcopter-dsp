@@ -14,98 +14,104 @@
 #define GYRO_VARIANT 1
 
 typedef struct __attribute__((packed)) {
-    float x;
-    float y;
-    float z;
+  float x;
+  float y;
+  float z;
 } MPU6050_Offset;
 
 typedef struct __attribute__((packed)) {
-    MPU6050_Offset gyroOffset;
-    MPU6050_Offset accOffset;
+  MPU6050_Offset gyroOffset;
+  MPU6050_Offset accOffset;
 } MPU6050_Calibration;
 
 typedef struct {
-    I2C_HandleTypeDef *hi2c;
-    float *mpu_acc_buff;
-    float *mpu_gyro_buff;
-    MPU6050_Calibration *calibration;
-    bool acc_busy;
-    bool gyro_busy;
+  I2C_HandleTypeDef *hi2c;
+  float acc_scale_factor;
+  float gyro_scale_factor;
+
+  float *mpu_acc_buffer;
+  float *mpu_gyro_buffer;
+
+  MPU6050_Calibration *calibration;
+
+  uint8_t mpu_acc_buf_raw[6];
+  uint8_t mpu_gyro_buf_raw[6];
+  uint8_t mpu_acc_gyro_buf_raw[14];
 } MPU6050_Device;
 
 typedef enum acc_range_t {
-    AFS_2g = 0x0U,
-    AFS_4g = 0x1U,
-    AFS_8g = 0x2U,
-    AFS_16g = 0x3U,
+  AFS_2g = 0x0U,
+  AFS_4g = 0x1U,
+  AFS_8g = 0x2U,
+  AFS_16g = 0x3U,
 } acc_range_t;
 
 typedef enum gyro_range_t {
-    FS_250dps = 0x0U,
-    FS_500dps = 0x1U,
-    FS_1000dps = 0x2U,
-    FS_2000dps = 0x3U,
+  FS_250dps = 0x0U,
+  FS_500dps = 0x1U,
+  FS_1000dps = 0x2U,
+  FS_2000dps = 0x3U,
 } gyro_range_t;
 
 typedef enum mpu_clk_src_t {
-    MPU_CLK_internal = 0,
-    MPU_CLK_PLL_X = 1,
-    MPU_CLK_PLL_Y = 2,
-    MPU_CLK_PLL_Z = 3,
-    MPU_CLK_external_32kHz = 4,
-    MPU_CLK_external_19MHz = 5,
-    MPU_CLK_STOP = 7,
+  MPU_CLK_internal = 0,
+  MPU_CLK_PLL_X = 1,
+  MPU_CLK_PLL_Y = 2,
+  MPU_CLK_PLL_Z = 3,
+  MPU_CLK_external_32kHz = 4,
+  MPU_CLK_external_19MHz = 5,
+  MPU_CLK_STOP = 7,
 } mpu_clk_src_t;
 
 typedef enum mpu_int_level_t {
-    MPU_int_active_high = 0U,
-    MPU_int_active_low = 1U,
+  MPU_int_active_high = 0U,
+  MPU_int_active_low = 1U,
 } mpu_int_level_t;
 
 typedef enum mpu_dlpf_cfg_t {
-    BAND_260HZ = 0U,
-    BAND_184HZ = 1U,
-    BAND_94Hz = 2U,
-    BAND_44HZ = 3U,
-    BAND_21HZ = 4U,
-    BAND_10HZ = 5U,
-    BAND_5HZ = 6U,
+  BAND_260HZ = 0U,
+  BAND_184HZ = 1U,
+  BAND_94Hz = 2U,
+  BAND_44HZ = 3U,
+  BAND_21HZ = 4U,
+  BAND_10HZ = 5U,
+  BAND_5HZ = 6U,
 } mpu_dlpf_cfg_t;
 
 // TODO: add self test values to struct
 typedef struct MPU6050_Config {
-    uint8_t sample_rate_divider;
-    gyro_range_t fs_sel;
-    acc_range_t afs_sel;
+  uint8_t sample_rate_divider;
+  gyro_range_t fs_sel;
+  acc_range_t afs_sel;
 
-    // for CONFIG_REG
-    uint8_t ext_sync_set;
-    mpu_dlpf_cfg_t dlpf_cfg;
-    // For INT_ENABLE
-    bool data_rdy_en;
-    bool i2c_mst_int_en;
-    bool fifo_oflow_en;
-    // For INT_PIN_CFG
-    mpu_int_level_t int_level;
-    bool int_open;
-    bool latch_int;
-    bool int_rd_clear;
-    bool fsync_int_level;
-    bool fsync_int_en;
-    bool i2c_bypass_en;
-    // PWR_MGMT_1
-    bool device_reset;
-    bool sleep;
-    bool cycle;
-    bool temp_dis;
-    mpu_clk_src_t clksel;
-    // USER_CTRL
-    bool fifo_en;
-    bool i2c_mst_en;
-    bool i2c_if_dis;
-    bool fifo_reset;
-    bool i2c_mst_reset;
-    bool sig_cond_reset;
+  // for CONFIG_REG
+  uint8_t ext_sync_set;
+  mpu_dlpf_cfg_t dlpf_cfg;
+  // For INT_ENABLE
+  bool data_rdy_en;
+  bool i2c_mst_int_en;
+  bool fifo_oflow_en;
+  // For INT_PIN_CFG
+  mpu_int_level_t int_level;
+  bool int_open;
+  bool latch_int;
+  bool int_rd_clear;
+  bool fsync_int_level;
+  bool fsync_int_en;
+  bool i2c_bypass_en;
+  // PWR_MGMT_1
+  bool device_reset;
+  bool sleep;
+  bool cycle;
+  bool temp_dis;
+  mpu_clk_src_t clksel;
+  // USER_CTRL
+  bool fifo_en;
+  bool i2c_mst_en;
+  bool i2c_if_dis;
+  bool fifo_reset;
+  bool i2c_mst_reset;
+  bool sig_cond_reset;
 } MPU6050_Config;
 
 #define AD0 0
@@ -274,16 +280,18 @@ typedef struct MPU6050_Config {
 
 /**
  * Initializes the MPU6050 device.
- * 
+ *
  * @param[in] mpu Pointer to the MPU6050 device structure.
+ * @param[in] acc_buff Pointer to the buffer for the accelerometer data.
+ * @param[in] gyro_buff Pointer to the buffer for the gyroscope data.
  * @param[in] cfg Pointer to the configuration structure.
- * @param[in] calibration Pointer to the calibration structure. 
- * 
+ * @param[in] calibration Pointer to the calibration structure.
+ *
  * @note The calibration structure should stored in non-volatile memory and filled with the calibration values.
- * 
+ *
  * @return HAL_OK if the device was initialized successfully, HAL_ERROR otherwise.
  */
-HAL_StatusTypeDef MPU_Init(MPU6050_Device *mpu, MPU6050_Config *cfg, MPU6050_Calibration *calibration);
+HAL_StatusTypeDef MPU_Init(MPU6050_Device *mpu, float *acc_buff, float *gyro_buff, MPU6050_Config *cfg, MPU6050_Calibration *calibration);
 
 HAL_StatusTypeDef MPU_ClearInterrupt(MPU6050_Device *mpu);
 HAL_StatusTypeDef MPU_ReadAcceleration(MPU6050_Device *mpu, float *output);

@@ -17,10 +17,10 @@ enum {
 };
 
 typedef struct {
-  MPU6050_Device mpu;
-  HAL_IMU_conversion_complete_callback_t imu_readout_callback;
+  HAL_IMU_OnConversionComplete imu_readout_callback;
   float acc[3];
   float gyro[3];
+  MPU6050_Device mpu;
 } IMU_Device;
 
 static IMU_Device imu;
@@ -28,23 +28,21 @@ static IMU_Device imu;
 static_assert(sizeof(HAL_IMU_Offset) == sizeof(MPU6050_Offset), "Offset size mismatch");
 static_assert(sizeof(HAL_IMU_Calibration) == sizeof(MPU6050_Calibration), "Calibration size mismatch");
 
-void HAL_IMU_init(HAL_IMU_conversion_complete_callback_t imu_readout_callback, HAL_IMU_Calibration *calibration) {
+void HAL_IMU_init(HAL_IMU_OnConversionComplete imu_readout_callback, HAL_IMU_Calibration *calibration) {
   assert(NULL != imu_readout_callback);
   assert(NULL != calibration);
 
   imu.mpu.hi2c = &hi2c1;
-  imu.mpu.mpu_acc_buff = imu.acc;
-  imu.mpu.mpu_gyro_buff = imu.gyro;
   MPU6050_Config mpu_config = MPU_GetDefaultConfiguration();
 
-  MPU_Init(&imu.mpu, &mpu_config, (MPU6050_Calibration*)calibration);
+  MPU_Init(&imu.mpu, imu.acc, imu.gyro, &mpu_config, (MPU6050_Calibration*)calibration);
 
   imu.imu_readout_callback = imu_readout_callback;
 }
 
-void HAL_IMU_deinit() {}
+void HAL_IMU_deinit() {} // Stub
 
-void HAL_IMU_proc() {}
+void HAL_IMU_proc() {} // Stub
 
 void HAL_IMU_start_conversion() { MPU_ClearInterrupt(&imu.mpu); }
 

@@ -8,15 +8,15 @@ typedef struct {
   NRF24L01_STRUCT nrf24l01;
   uint8_t telemetry[24];
   uint8_t rxPayload[8];
-  HAL_RADIO_receive_complete_callback_t radio_receive_callback;
-  HAL_RADIO_request_receive_callback_t radio_request_receive_callback;
   bool telemetry_enabled;
+  HAL_RADIO_OnReceiveComplete radio_receive_callback;
+  HAL_RADIO_OnRequestReceived radio_request_receive_callback;
 } Radio_t;
 
 static Radio_t radio;
 
-void HAL_RADIO_init(HAL_RADIO_receive_complete_callback_t radio_receive_callback,
-                    HAL_RADIO_request_receive_callback_t radio_request_receive_callback) {
+void HAL_RADIO_init(HAL_RADIO_OnReceiveComplete radio_receive_callback,
+                    HAL_RADIO_OnRequestReceived radio_request_receive_callback) {
   assert(radio_receive_callback != NULL);
 
   // Initialize NRF24L01
@@ -63,7 +63,7 @@ void HAL_RADIO_receive_payload() {
   NRF24L01_Start_Listening(&radio.nrf24l01);
 }
 
-void HAL_RADIO_write_telemetry_payload(const uint8_t *data, const uint8_t len) {
+void HAL_RADIO_write_telemetry_payload(const uint8_t *data, uint8_t len) {
   assert(data != NULL);
   memcpy(radio.telemetry, data, len);
 }

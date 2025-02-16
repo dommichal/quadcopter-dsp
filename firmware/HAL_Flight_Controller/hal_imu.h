@@ -27,9 +27,9 @@ typedef struct __attribute__((packed)) {
   HAL_IMU_Offset accOffset;
 } HAL_IMU_Calibration;
 
-typedef void (*HAL_IMU_conversion_complete_callback_t)(const float *acc, const float *gyro);
+typedef void (*HAL_IMU_OnConversionComplete)(const float *acc, const float *gyro);
 
-void HAL_IMU_init(HAL_IMU_conversion_complete_callback_t imu_readout_callback, HAL_IMU_Calibration *calibration);
+void HAL_IMU_init(HAL_IMU_OnConversionComplete imu_readout_callback, HAL_IMU_Calibration *calibration);
 void HAL_IMU_deinit(void);
 void HAL_IMU_calibrate(HAL_IMU_Calibration *calibration);
 void HAL_IMU_proc(void);

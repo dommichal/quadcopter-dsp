@@ -61,7 +61,7 @@ void Kalman_Estimate(KalmanFilter *kalman, float *kalmanState, float measurement
   /* calculate current variance */
   kalman->variancePrediction = kalman->variancePrediction + kalman->extrapolationTerm; 
   /* update kalman gain */
-  kalman->kalman_gain = kalman->variancePrediction/(kalman->variancePrediction + kalman->angleVariance);
+  kalman->kalman_gain = kalman->variancePrediction / (kalman->variancePrediction + kalman->angleVariance);
   /* predict kalman angle */
   *kalmanState = *kalmanState + kalman->kalman_gain * (measurement - *kalmanState);
   /* update variance */
