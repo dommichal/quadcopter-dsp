@@ -1,4 +1,4 @@
 set(MCU_FAMILY  STM32F1xx)
 set(MCU_MODEL STM32F103XB)
 
-option(USE_BOOTLOADER "Use bootloader" OFF)
+option(USE_BOOTLOADER "Use bootloader" ON)

@@ -14,7 +14,6 @@
 #include "dsp/pid.h"
 #include "drivers/motors.h"
 
-// static IIR_filter_t iir;
 static PIDController roll_pid, pitch_pid, yaw_pid;
 
 static Stabilizer_Trim *trim;
@@ -55,24 +54,19 @@ void Stabilizer_init(Stabilizer_Trim *trimSettings) {
     roll_pid.tau  =  0.005f;  // 25Hz cutoff freq
     roll_pid.kp   =  2.0f;
     roll_pid.ki   =  0.0f;  
-    roll_pid.kd   = -0.2f;
+    roll_pid.kd   = -0.35f;
     
     //pitch pid
     pitch_pid.tau =  0.005f; // 25Hz cutoff freq
     pitch_pid.kp  =  2.0f;
     pitch_pid.ki  =  0.0f;
-    pitch_pid.kd  = -0.2f;
+    pitch_pid.kd  = -0.35f;
 
     //yaw pid
     yaw_pid.tau =  0.008f;  // 20Hz cutoff freq
     yaw_pid.kp  =  2.0f;
     yaw_pid.ki  =  0.0f;
     yaw_pid.kd  =  0.0f;
-
-    // //yaw filter
-    // iir.tau = 0.007f;
-    // iir.samplingTime = 0.001f;
-    // Low_Pass_IIR_Filter_Init(&iir);
 
     PID_init(&roll_pid);
     PID_init(&pitch_pid);
