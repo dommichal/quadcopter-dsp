@@ -24,7 +24,7 @@ typedef struct {
     float maxInt;
     float minInt;
 
-} pid_t;
+} PIDController;
 
 /**
  * @brief Initializes the PID controller.
@@ -33,7 +33,7 @@ typedef struct {
  *
  * @param pid Pointer to the PID controller structure.
  */
-void PID_init(pid_t *pid);
+void PID_init(PIDController *pid);
 
 /**
  * @brief Calculates the output of a PID controller.
@@ -45,6 +45,6 @@ void PID_init(pid_t *pid);
  * @param target The desired target value.
  * @return The calculated output of the PID controller.
  */
-float PID_Calculate(pid_t *pid, float input, float target);
+float PID_Calculate(PIDController *pid, float input, float target);
 
 #endif // PID

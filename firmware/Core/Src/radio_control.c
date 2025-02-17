@@ -1,0 +1,82 @@
+/**
+ * @file rc.c
+ * @author Dominik Michalczyk
+ * @brief Radio control liblary for decoding
+ *        messages
+ * @version 0.1
+ * @date 2024-01-26
+ *
+ *
+ */
+#include "radio_control.h"
+
+/**
+ * @brief decode message
+ *        -  msg[0] - Thrust
+ *        -  msg[1] - Pitch
+ *        -  msg[2] - Yaw
+ *        -  msg[3] - Roll
+ *        -  msg[4] - Power on
+ *        -  msg[5] - Power off
+ *        - (msg[6] - msg[8]) - free
+ */
+void RadioControl_ReceiveMessage(const uint8_t message[8], RadioControl *rc) {
+    int8_t *message_int = (int8_t *)message;
+    
+    if (message_int[0] > ACTIVATION_THRESHOLD_THRUST) {
+        rc->controls_inputs[THRUST] = message_int[0];
+    } else {
+        rc->controls_inputs[THRUST] = 10;
+    }
+
+    if (message_int[1] > ACTIVATION_THRESHOLD ||
+        message_int[1] < -ACTIVATION_THRESHOLD) {
+        rc->controls_inputs[PITCH] = message_int[1] * PITCH_ANGLE_SCALE;
+    } else {
+        rc->controls_inputs[PITCH] = 0;
+    }
+
+    if (message_int[2] > ACTIVATION_THRESHOLD ||
+        message_int[2] < -ACTIVATION_THRESHOLD) {
+        rc->controls_inputs[YAW] = message_int[2] * YAW_ANGLE_SCALE;
+    } else {
+        rc->controls_inputs[YAW] = 0;
+    }
+
+    if (message_int[3] > YAW_ACTIVATION_THRESHOLD ||
+        message_int[3] < -YAW_ACTIVATION_THRESHOLD) {
+        rc->controls_inputs[ROLL] = message_int[3] * ROLL_ANGLE_SCALE;
+    } else {
+        rc->controls_inputs[ROLL] = 0;
+    }
+
+    if (message_int[4] == 1 && rc->power_on == false) {
+        rc->power_on =true;
+    }
+
+    if (message_int[5] == 1 && rc->power_on == true) {
+        rc->power_on = false;
+    }
+}
+
+uint16_t time_out_cnt = 0;
+
+void RadioControl_ConnectionTick() { time_out_cnt = 0; }
+
+bool RadioControl_CheckConnection() {
+    HAL_Delay(1);
+    if (time_out_cnt < MAX_CONTROLLER_TIMEOUT) {
+        time_out_cnt++;
+    }
+    return (time_out_cnt >= MAX_CONTROLLER_TIMEOUT);
+}
+
+void RadioControl_DecreaseAltitude(RadioControl *rc) {
+    rc->controls_inputs[ROLL] = 0;
+    rc->controls_inputs[PITCH] = 0;
+    rc->controls_inputs[YAW] = 0;
+    while (rc->controls_inputs[THRUST] > 10) {
+        HAL_Delay(800);
+        rc->controls_inputs[THRUST]--;
+    }
+}

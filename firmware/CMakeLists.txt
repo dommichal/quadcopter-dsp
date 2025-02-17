@@ -1,17 +1,20 @@
 cmake_minimum_required(VERSION 3.22)
 
 # Setup compiler settings
-set(CMAKE_C_STANDARD 11)
+set(CMAKE_C_STANDARD 17)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
 
-# Set target settings
-set(MCU_FAMILY  STM32F1xx)
-set(MCU_MODEL STM32F103XB)
-# set(MCU_FAMILY CACHE STRING STM32F1xx)
-# set(MCU_MODEL CACHE STRING STM32F103XB)
+include(config.cmake)
 
-set(LINKER_SCRIPT_NAME ${MCU_MODEL}_FLASH.ld)
+# Set the linker script
+if(USE_BOOTLOADER)
+    # Set the vector table start address
+    set(USER_VECT_TAB_ADDRESS ON)
+    set(LINKER_SCRIPT_NAME ${MCU_MODEL}_FLASH_BOOTLOADER.ld)
+else()
+    set(LINKER_SCRIPT_NAME ${MCU_MODEL}_FLASH.ld)
+endif()
 
 string(TOLOWER ${MCU_MODEL} MCU_MODEL_LOWER)
 string(TOLOWER ${MCU_FAMILY} MCU_FAMILY_LOWER)
@@ -30,6 +33,13 @@ include(gcc-arm-none-eabi.cmake)
 # Include functions file
 include(functions.cmake)
 
+# Include external projects
+include(external.cmake)
+
+# Include requirements
+include(requirements.cmake)
+FetchContent_MakeAvailable(serial_cli)
+
 # Enable compile command to ease indexing with e.g. clangd
 set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
 
@@ -43,9 +53,7 @@ message("Build type: " ${CMAKE_BUILD_TYPE})
 
 # Create an executable object type
 add_executable(${CMAKE_PROJECT_NAME}
-    # Core/Src/drivers/bmp280.c
-    # Core/Src/drivers/flash_memory.c
-    # Core/Src/drivers/ibus.c
+    Core/Src/nvm.c
     Core/Src/drivers/motors.c
     Core/Src/dsp/angle_estimation.c
     Core/Src/dsp/filters.c
@@ -53,8 +61,8 @@ add_executable(${CMAKE_PROJECT_NAME}
     Core/Src/dsp/stabilizer.c
     
     Core/Src/flight_controller.c
-    Core/Src/logger.c
-    Core/Src/rc.c
+    Core/Src/radio_control.c
+    Core/Src/cli_commands.c
     Core/Src/main.c
 
     Core/Src/syscalls.c
@@ -81,11 +89,23 @@ add_subdirectory(HAL_Flight_Controller/NRF24L01)
 
 # Add linked libraries
 target_link_libraries(${CMAKE_PROJECT_NAME}
-    # PUBLIC
     ${MCU_FAMILY_LOWER}Hal
-    # PRIVATE
     mpu6050
     nrf24l01
+    serial_cli
 )
 
-target_stlink_flash(${CMAKE_PROJECT_NAME})
+if(MCU_MODEL STREQUAL "STM32F103XB")
+    target_compile_definitions(${CMAKE_PROJECT_NAME} PRIVATE
+        NVM_ADDRESS=0x0800FC00
+    )
+endif()
+
+# Create Intel HEX file
+add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+    COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${CMAKE_PROJECT_NAME}> ${CMAKE_PROJECT_NAME}.hex
+    COMMENT "Generating HEX file"
+)
+
+target_stlink_flash_app(${CMAKE_PROJECT_NAME})
+target_stlink_flash_bootloader("STM32f103_msd_bootloader")

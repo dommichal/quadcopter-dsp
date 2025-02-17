@@ -6,8 +6,6 @@ import math
 import threading
 import numpy as np
 
-from logger import DataLogger
-
 ser = serial.Serial('/dev/ttyUSB0', 57600)
 
 class XboxController(object):
@@ -15,9 +13,6 @@ class XboxController(object):
     MAX_JOY_VAL = math.pow(2, 15)
 
     def __init__(self):
-
-        self.dataLogger = DataLogger("flight5.csv")
-
         self.LeftJoystickY = 0
         self.LeftJoystickX = 0
         self.RightJoystickY = 0
@@ -63,7 +58,6 @@ class XboxController(object):
 
         try:
             [acc0, acc1, acc2, gyro0, gyro1, gyro2] = struct.unpack('6f', msg)
-            self.dataLogger.log_data(acc0, acc1, acc2, gyro0, gyro1, gyro2)
             print(f"{acc0:7.2f} {acc1:7.2f} {acc2:7.2f} {gyro0:7.2f} {gyro1:7.2f} {gyro2:7.2f}", end="\r")
         except:
             pass
@@ -112,7 +106,7 @@ class XboxController(object):
                     self.UpDPad = event.state
                 elif event.code == 'BTN_TRIGGER_HAPPY4':
                     self.DownDPad = event.state
-
+            time.sleep(0.005)
 
 if __name__ == '__main__':
     joy = XboxController()
@@ -123,3 +117,4 @@ if __name__ == '__main__':
         except KeyboardInterrupt:
             print(" Nara")
             exit()
+        time.sleep(0.005)

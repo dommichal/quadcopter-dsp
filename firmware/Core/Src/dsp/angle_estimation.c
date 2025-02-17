@@ -1,82 +1,46 @@
 /**
  * @author Kacper Filipek & Dominik Michalczyk
+ * @brief Module responsible for estimating rotation angles
+ *        using accelerometer and gyroscope data.
  * @date  10-09-2023
  */
 
-#include <dsp/angle_estimation.h>
+#include "dsp/angle_estimation.h"
 
-/**
- * @brief Calculate fixed frame Euler roll and pitch 
- * @details [ax, ay, az] = (rotation matrix form fixed frame to body frame) * (g vector) 
- *          ax = g * sin(pitch), ay = -g * sin(roll) * cos(pitch), az = -g * cos(roll) * cos(pitch) 
-  */
-void Calculate_Angles_Acc_Euler(float acc_buf[3], float angles[2]){
-  const int x    = 0, y     = 1, z   = 2;
-  //remove offset
-  acc_buf[x] = acc_buf[x] - AX_OFFSET;
+enum {
+  X = 0,
+  Y,
+  Z,
+};
 
-  //cannot divide by 0
-  if(acc_buf[z] == 0){
-    acc_buf[z] = 0.000001f;
-  }
-  
-  angles[0] = atanf(acc_buf[y]/acc_buf[z]);
+enum {
+  ROLL = 0,
+  PITCH,
+  YAW,
+};
 
-  //sin must be in <-1, 1>
-  if(acc_buf[x] > 1){
-    acc_buf[x] = 1;
-  }
-  if(acc_buf[x] < -1){
-    acc_buf[x] = -1;
-  }
-
-  angles[1] = asinf(acc_buf[x]);
+void Euler_ComputeAngles(float acceleration[3], float angles[2]){
+  angles[ROLL] = atanf(acceleration[Y]/acceleration[Z]);
+  angles[PITCH] = atanf(acceleration[X]/sqrtf(acceleration[Y] * acceleration[Y] + acceleration[Z] * acceleration[Z]));
 }
 
-/**
- * @brief Calculate fixed frame Euler roll and pitch 
- * @note Remap gyro angular velocity (mpu on pcb orientation)
- *       gyro_x = -gyro_x;
-  */
-void Calculate_Angles_acc(float acc_buf[3], float angles[2]){
-  const int x    = 0, y     = 1, z   = 2;
-  
-  angles[0] = atanf(acc_buf[y]/acc_buf[z]);
-  angles[1] = atanf(acc_buf[x]/sqrtf(acc_buf[y] * acc_buf[y] + acc_buf[z] * acc_buf[z]));
+void Euler_ComputeAngularVelocities(float angleChange[3], float angles[2], const float gyro[3]){
+  float sin_psi   = sinf(angles[ROLL]);
+  float cos_psi   = cosf(angles[ROLL]);
+  float cos_theta = cosf(angles[PITCH]);
+  float tan_theta = tanf(angles[PITCH]);  
+
+  angleChange[X] = -gyro[X] + tan_theta * (sin_psi  * gyro[Y] + cos_psi * gyro[Z]);
+  angleChange[Y] = cos_psi * gyro[Y] - sin_psi * gyro[Z];
+  angleChange[Z] = (sin_psi / cos_theta) * gyro[Y] + (cos_psi / cos_theta) * gyro[Z];
 }
 
-/**
- * @brief calculates the rotational speed of Euler angles
- * @note Remap gyro angular velocity (mpu on pcb orientation)
- *       gyro_x = -gyro_x;
- * @param angle_change Euler angular velocities
- * @param angles current estimation of euler angles [roll, pitch, yaw]
- * @param gyro gyro inputs [x, y, z]
- */
+void Complementary_CalculateRollAndPitch(float angles[2], float acc_angles[2], float angleChange[3], float dt, float alpha){
+  angles[ROLL] += degToRad(angleChange[ROLL]) * dt;   
+  angles[PITCH] += degToRad(angleChange[PITCH]) * dt;   
 
-void Calculate_Angular_Velocities(float angle_change[3], float angles[2], const float gyro[3]){
-  const int roll = 0, pitch = 1;
-  const int x    = 0, y     = 1, z   = 2;
-
-  float sin_psi   = sinf(angles[roll]);
-  float cos_psi   = cosf(angles[roll]);
-  float cos_theta = cosf(angles[pitch]);
-  float tan_theta = tanf(angles[pitch]);  
-
-  angle_change[0] = -gyro[x] + tan_theta * (sin_psi  * gyro[y] + cos_psi * gyro[z]);
-  angle_change[1] = cos_psi * gyro[y] - sin_psi * gyro[z];
-  angle_change[2] = (sin_psi / cos_theta) * gyro[y] + (cos_psi / cos_theta) * gyro[z];
-}
-
-/**
- * @brief estimates Euler angles using a complementary filter
-  */
-void Get_Complementary_Roll_Pitch(float angles[2], float acc_angles[2], float angle_change[3], float dt, float alpha){
-  angles[0] += degToRad(angle_change[0]) * dt;   
-  angles[1] += degToRad(angle_change[1]) * dt;   
-
-  angles[0] = alpha * acc_angles[0] + (1-alpha) * angles[0];
-  angles[1] = alpha * acc_angles[1] + (1-alpha) * angles[1];
+  angles[ROLL] = alpha * acc_angles[ROLL] + (1-alpha) * angles[ROLL];
+  angles[PITCH] = alpha * acc_angles[PITCH] + (1-alpha) * angles[PITCH];
 }
 
 void Get_XY_Velocities(float acc[3], float angles[3]){
@@ -84,108 +48,91 @@ void Get_XY_Velocities(float acc[3], float angles[3]){
   (void)angles;
 }
 
-/**
- * @brief one dimensional Kalman filter
-  */
-void Kalman_init(kalman_t *kalman){
-  kalman->kalman_extrapolation_term = kalman->sampling_time * kalman->sampling_time * kalman->angular_velocity_variance;
+void Kalman_Init(KalmanFilter *kalman){
+  kalman->extrapolationTerm = kalman->sampling_time * kalman->sampling_time * kalman->angular_velocity_variance;
   
   /* initial guess */
-  kalman->variance_prediction = sqrt(kalman->angle_variance);
+  kalman->variancePrediction = sqrt(kalman->angleVariance);
 }
 
-void Kalman_calculate(kalman_t *kalman, float *kalman_state, float measurement, float velocity){
+void Kalman_Estimate(KalmanFilter *kalman, float *kalmanState, float measurement, float velocity){
   /* predict current state */
-  *kalman_state = *kalman_state + kalman->sampling_time * velocity;
+  *kalmanState = *kalmanState + kalman->sampling_time * velocity;
   /* calculate current variance */
-  kalman->variance_prediction = kalman->variance_prediction + kalman->kalman_extrapolation_term; 
+  kalman->variancePrediction = kalman->variancePrediction + kalman->extrapolationTerm; 
   /* update kalman gain */
-  kalman->kalman_gain = kalman->variance_prediction/(kalman->variance_prediction + kalman->angle_variance);
+  kalman->kalman_gain = kalman->variancePrediction / (kalman->variancePrediction + kalman->angleVariance);
   /* predict kalman angle */
-  *kalman_state = *kalman_state + kalman->kalman_gain * (measurement - *kalman_state);
+  *kalmanState = *kalmanState + kalman->kalman_gain * (measurement - *kalmanState);
   /* update variance */
-  kalman->variance_prediction = (1 - kalman->kalman_gain) * kalman->variance_prediction;
+  kalman->variancePrediction = (1 - kalman->kalman_gain) * kalman->variancePrediction;
 }
 
 #ifdef KALMAN
-static kalman_t kalman_pitch;
-static kalman_t kalman_roll;
+static KalmanFilter kalmanPitch;
+static KalmanFilter kalmanRoll;
 #endif
-static IIR_filter_t iir;
-static float s_dt, s_alpha;
 
-/**
- * @brief Initialize Angle estimator
- * 
- * @param dt 
- * @param alpha 
- * @param tau 
- */
-void Estimate_Angles_Init(float dt, float alpha, float tau){
-  s_dt = dt;
-  s_alpha = alpha;
+static IIR_filter_t iir;
+static float complementartSampling, filterAlpha;
+
+static float filter_acc_x_in[2]  = {0};
+static float filter_acc_x_out[2] = {0};
+
+static float filter_acc_y_in[2]  = {0};
+static float filter_acc_y_out[2] = {0};
+
+static float filter_acc_z_in[2]  = {0};
+static float filter_acc_z_out[2] = {0};
+
+void Estimator_Init(float dt, float alpha, float tau){
+  complementartSampling = dt;
+  filterAlpha = alpha;
 
   iir.samplingTime = dt;
   iir.tau = tau;
   Low_Pass_IIR_Filter_Init(&iir);
 
   #ifdef KALMAN
-  kalman_pitch.sampling_time = dt;
-  kalman_pitch.angular_velocity_variance = degToRad(4) * degToRad(4);
-  kalman_pitch.angle_variance = degToRad(3) * degToRad(3);
-  Kalman_init(&kalman_pitch);
+  kalmanPitch.sampling_time = dt;
+  kalmanPitch.angular_velocity_variance = degToRad(4) * degToRad(4);
+  kalmanPitch.angleVariance = degToRad(3) * degToRad(3);
+  Kalman_Init(&kalmanPitch);
 
-  kalman_roll.sampling_time = dt;
-  kalman_roll.angular_velocity_variance = degToRad(4) * degToRad(4);
-  kalman_roll.angle_variance = degToRad(3) * degToRad(3);
-  Kalman_init(&kalman_roll);  
+  kalmanRoll.sampling_time = dt;
+  kalmanRoll.angular_velocity_variance = degToRad(4) * degToRad(4);
+  kalmanRoll.angleVariance = degToRad(3) * degToRad(3);
+  Kalman_Init(&kalmanRoll);  
   #endif
 }
 
-/**
- * @brief Calculates Euler angles estimates using 
- *        1D Kalman or complementary filter
- * 
-  */
-void Estimate_Angles(float angles[2], float angular_velocities[3], const float acc_buf[3], const float gyro_buff[3]){
-  const int x = 0, y = 1, z = 2;
+void Estimator_DetermineAngles(float angles[2], float angularRates[3], const float acceleration[3], const float gyro[3]){
   float acc_angles[2];
   float filtered_acc[3];
 
-  static float filter_acc_x_in[2]  = {0};
-  static float filter_acc_x_out[2] = {0};
-
-  static float filter_acc_y_in[2]  = {0};
-  static float filter_acc_y_out[2] = {0};
-
-  static float filter_acc_z_in[2]  = {0};
-  static float filter_acc_z_out[2] = {0};
-
-  filter_acc_x_in[0] = acc_buf[x];
+  filter_acc_x_in[0] = acceleration[X];
   Low_Pass_IIR_Filter(&iir, filter_acc_x_out, filter_acc_x_in);
-  filtered_acc[x] = filter_acc_x_out[0];
+  filtered_acc[X] = filter_acc_x_out[0];
 
-  filter_acc_y_in[0] = acc_buf[y];
+  filter_acc_y_in[0] = acceleration[Y];
   Low_Pass_IIR_Filter(&iir, filter_acc_y_out, filter_acc_y_in);
-  filtered_acc[y] = filter_acc_y_out[0];
+  filtered_acc[Y] = filter_acc_y_out[0];
 
-  filter_acc_z_in[0] = acc_buf[z];
+  filter_acc_z_in[0] = acceleration[Z];
   Low_Pass_IIR_Filter(&iir, filter_acc_z_out, filter_acc_z_in);
-  filtered_acc[z] = filter_acc_z_out[0];
+  filtered_acc[Z] = filter_acc_z_out[0];
 
-  Calculate_Angles_acc(filtered_acc, acc_angles);
-  Calculate_Angular_Velocities(angular_velocities, angles, gyro_buff);
-
-  angular_velocities[2] = roundf(angular_velocities[2] / 10.0f);
+  Euler_ComputeAngles(filtered_acc, acc_angles);
+  Euler_ComputeAngularVelocities(angularRates, angles, gyro);
 
   #ifdef KALMAN
-  Kalman_calculate(&kalman_pitch, &angles[0], acc_angles[0], degToRad(angular_velocities[0]));
-  Kalman_calculate(&kalman_roll, &angles[1], acc_angles[1], degToRad(angular_velocities[1]));
+  Kalman_Estimate(&kalmanRoll, &angles[ROLL], acc_angles[ROLL], degToRad(angularRates[X]));
+  Kalman_Estimate(&kalmanPitch, &angles[PITCH], acc_angles[PITCH], degToRad(angularRates[Y]));
   #else
-  angles[0] += degToRad(angular_velocities[0]) * s_dt;   
-  angles[1] += degToRad(angular_velocities[1]) * s_dt;   
+  angles[0] += degToRad(angularRates[0]) * complementartSampling;   
+  angles[1] += degToRad(angularRates[1]) * complementartSampling;   
 
-  angles[0] = s_alpha * acc_angles[0] + (1-s_alpha) * angles[0];
-  angles[1] = s_alpha * acc_angles[1] + (1-s_alpha) * angles[1];  
+  angles[0] = filterAlpha * acc_angles[0] + (1-filterAlpha) * angles[0];
+  angles[1] = filterAlpha * acc_angles[1] + (1-filterAlpha) * angles[1];  
   #endif // KALMAN
 }

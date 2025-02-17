@@ -32,9 +32,6 @@ HAL_StatusTypeDef NRF24L01_Init(NRF24L01_STRUCT *nrf24l01, NRF24L01_CONFIG *nrf2
 {
     uint8_t data; HAL_StatusTypeDef status; 
 
-    /* Clear Payload Flag */
-    nrf24l01->payloadFlag = 0;
-
     HAL_GPIO_WritePin(nrf24l01->nrf24l01GpioPort, nrf24l01->csnPin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(nrf24l01->nrf24l01GpioPort, nrf24l01->cePin, GPIO_PIN_RESET);
 
@@ -243,7 +240,7 @@ HAL_StatusTypeDef NRF24L01_Send_Payload(NRF24L01_STRUCT *nrf24l01)
     TIM1_Delay_Microseconds(15);
     HAL_GPIO_WritePin(nrf24l01->nrf24l01GpioPort, nrf24l01->cePin, GPIO_PIN_RESET);
 
-    uint8_t data;
+    uint8_t data = 0;
     HAL_StatusTypeDef status = NRF24L01_Read_Byte(nrf24l01, NRF_STATUS, &data);
     if(status != HAL_OK){ return status; }                                    
     /* If max retransmissions occur clear MAX_RT flag to enable further communication */
@@ -286,7 +283,7 @@ void NRF24L01_Stop_Listening(NRF24L01_STRUCT *nrf24l01){
  * @brief Check if packet is in rx fifo 
  */
 HAL_StatusTypeDef NRF24L01_Packet_Available(NRF24L01_STRUCT *nrf24l01){
-    uint8_t data;
+    uint8_t data = 0;
     NRF24L01_Read_Byte(nrf24l01, FIFO_STATUS, &data);
 
     if(!(data & 1<<RX_EMPTY)){ 
@@ -325,10 +322,8 @@ HAL_StatusTypeDef NRF24L01_Read_PayloadDMA(NRF24L01_STRUCT *nrf24l01, uint8_t le
 {
     HAL_GPIO_WritePin(nrf24l01->nrf24l01GpioPort, nrf24l01->csnPin, GPIO_PIN_RESET);
     
-    nrf24l01->payloadFlag = 1;                               
-
     HAL_StatusTypeDef status = HAL_SPI_TransmitReceive_DMA(nrf24l01->spiHandle, nrf24l01->txBuff,
-                                                           nrf24l01->payloadBuff, len+1);
+                                                           nrf24l01->payloadBuff, len + 1);
     
     return status;
 }
@@ -344,8 +339,7 @@ void NRF24L01_Read_PayloadDMA_Complete(NRF24L01_STRUCT *nrf24l01, uint8_t *data,
     for (size_t i = 0; i < len; i++)
     {
         data[i] = nrf24l01->payloadBuff[i+1];
-    }                               
-
+    }
 }
 
 /**

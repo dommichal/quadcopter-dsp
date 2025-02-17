@@ -62,7 +62,8 @@ _Min_Stack_Size = 0x400; /* required amount of stack */
 MEMORY
 {
 RAM (xrw)      : ORIGIN = 0x20000000, LENGTH = 20K
-FLASH (rx)      : ORIGIN = 0x8000000, LENGTH = 64K
+FLASH (rx)     : ORIGIN = 0x8000000,  LENGTH = 63k
+NVM(rw)       : ORIGIN = 0x800FC00, LENGTH = 1k
 }
 
 /* Define output sections */
@@ -173,7 +174,11 @@ SECTIONS
     . = ALIGN(8);
   } >RAM
 
-  
+  /* Section for persistant data storage */
+  .nvm_section 0x800FC00:
+  {
+    KEEP(*(.nvm_section))
+  } >NVM
 
   /* Remove information from the standard libraries */
   /DISCARD/ :

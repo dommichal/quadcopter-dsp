@@ -7,17 +7,16 @@
 typedef struct {
   NRF24L01_STRUCT nrf24l01;
   uint8_t telemetry[24];
-  uint8_t payloadBuff[8];
-  HAL_RADIO_receive_complete_callback_t radio_receive_callback;
-  HAL_RADIO_request_receive_callback_t radio_request_receive_callback;
+  uint8_t rxPayload[8];
   bool telemetry_enabled;
+  HAL_RADIO_OnReceiveComplete radio_receive_callback;
+  HAL_RADIO_OnRequestReceived radio_request_receive_callback;
 } Radio_t;
 
 static Radio_t radio;
 
-void HAL_RADIO_init(
-    HAL_RADIO_receive_complete_callback_t radio_receive_callback,
-    HAL_RADIO_request_receive_callback_t radio_request_receive_callback) {
+void HAL_RADIO_init(HAL_RADIO_OnReceiveComplete radio_receive_callback,
+                    HAL_RADIO_OnRequestReceived radio_request_receive_callback) {
   assert(radio_receive_callback != NULL);
 
   // Initialize NRF24L01
@@ -25,7 +24,7 @@ void HAL_RADIO_init(
   radio.nrf24l01.csnPin = CSN_Pin;
   radio.nrf24l01.cePin = CE_Pin;
   radio.nrf24l01.spiHandle = &hspi1;
-  
+
   radio.radio_receive_callback = radio_receive_callback;
   radio.radio_request_receive_callback = radio_request_receive_callback;
   radio.telemetry_enabled = true;
@@ -36,7 +35,6 @@ void HAL_RADIO_init(
   NRF24L01_Enable_ACKN_Payload(&radio.nrf24l01);
   const uint64_t rx_addr_pipe = 0xc2c2c2c2c2LL;
   NRF24L01_Open_Reading_Pipe(&radio.nrf24l01, RX_ADDR_P1, rx_addr_pipe, 8);
-
 }
 
 void HAL_RADIO_deinit() {}
@@ -60,13 +58,12 @@ void HAL_RADIO_request_readout() {
 }
 
 void HAL_RADIO_receive_payload() {
-  NRF24L01_Read_PayloadDMA_Complete(&radio.nrf24l01, radio.payloadBuff, 8);
-  radio.radio_receive_callback(radio.payloadBuff, 8);
+  NRF24L01_Read_PayloadDMA_Complete(&radio.nrf24l01, radio.rxPayload, 8);
+  radio.radio_receive_callback(radio.rxPayload, 8);
   NRF24L01_Start_Listening(&radio.nrf24l01);
 }
 
-void HAL_RADIO_write_telemetry_payload(const uint8_t *data, const uint8_t len) {
-  assert(len <= 24);
+void HAL_RADIO_write_telemetry_payload(const uint8_t *data, uint8_t len) {
   assert(data != NULL);
   memcpy(radio.telemetry, data, len);
 }
