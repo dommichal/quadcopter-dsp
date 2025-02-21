@@ -56,10 +56,12 @@ void HAL_IMU_start_conversion() {
 void HAL_IMU_stop_conversion() { MPU_ClearInterrupt(&imu.mpu); }
 
 void HAL_IMU_calibrate(HAL_IMU_Calibration *calibration) {
+  HAL_IMU_stop_conversion();
   MPU6050_Offset *gyro_offset = (MPU6050_Offset *)&calibration->gyroOffset;
   MPU6050_Offset *acc_offset = (MPU6050_Offset *)&calibration->accOffset;
   MPU_MeasureAccelerometerOffset(&imu.mpu, acc_offset, IMU_ACC_CALIBRATION_SAMPLES);
   MPU_MeasureGyroOffset(&imu.mpu, gyro_offset, IMU_GYRO_CALIBRATION_SAMPLES);
+  HAL_IMU_start_conversion();
 }
 
 void HAL_IMU_request_readout() { MPU_ReadAccGyroDMA(&imu.mpu); }

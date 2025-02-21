@@ -18,7 +18,7 @@ static RadioTelemtery telemetry;
 static SerialCLI cli;
 static NVM_Storage *storage;
 
-static float angle_change[3];
+static float angleRates[3];
 static float angles[3];
 
 void CDC_ReceiveCallBack(uint8_t *Buf, uint32_t Len) { SerialCLI_Read(&cli, (char *)Buf, Len); }
@@ -44,8 +44,8 @@ void HAL_RADIO_receive_complete_callback(const uint8_t *packet, uint8_t packet_l
 void IMU_conversion_complete_callback(const float *acc, const float *gyro) {
   HAL_GPIO_WritePin(SPI_CS_GPIO_Port, SPI_CS_Pin, GPIO_PIN_SET);
 
-  Estimator_DetermineAngles(angles, angle_change, acc, gyro);
-  Stabilizer_Update(angles, angle_change, rc.controls_inputs);
+  Estimator_DetermineAngles(angles, angleRates, acc, gyro);
+  Stabilizer_Update(angles, angleRates, rc.controls_inputs);
   Motors_Switch(rc.power_on);
 
   telemetry.floatingPoint[0] = radToDeg(angles[0]);
@@ -60,9 +60,9 @@ void FC_init() {
   NVM_Init();
   storage = NVM_GetStorage();
 
-  Stabilizer_init(&storage->trim);
-  const float dt = 0.001f, comp_alpha = 0.001f, iir_tau = 0.04f;
-  Estimator_Init(dt, comp_alpha, iir_tau);
+  Stabilizer_init();
+  const float dt = 0.001f;
+  Estimator_Init(dt);
 
   HAL_RADIO_init(HAL_RADIO_receive_complete_callback, HAL_RADIO_request_receive_callback);
   HAL_IMU_init(IMU_conversion_complete_callback, &storage->imuCalibration);

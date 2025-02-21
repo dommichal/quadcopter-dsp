@@ -16,19 +16,7 @@
 
 static PIDController roll_pid, pitch_pid, yaw_pid;
 
-static Stabilizer_Trim *trim;
-
-void Stabilizer_init(Stabilizer_Trim *trimSettings) {
-    assert(NULL != trim);
-
-    trim = trimSettings;
-
-    if(trim->roll > MAX_TRIM) trim->roll = MAX_TRIM;
-    if(trim->roll < -MAX_TRIM) trim->roll = -MAX_TRIM;
-
-    if(trim->pitch > MAX_TRIM) trim->pitch = MAX_TRIM;
-    if(trim->pitch < -MAX_TRIM) trim->pitch = -MAX_TRIM;
-
+void Stabilizer_init() {
     // Initialize all pids sample times and max_values
     roll_pid.maxOut =   75;
     roll_pid.minOut =  -75;
@@ -74,6 +62,10 @@ void Stabilizer_init(Stabilizer_Trim *trimSettings) {
 }
 
 void Stabilizer_Update(float angles[2], float angular_velocities[3], int8_t control_inputs[4]){
+    assert(NULL != angles);
+    assert(NULL != angular_velocities);
+    assert(NULL != control_inputs);
+
     float set_val[3];
     float duty_cycles[3];
 
@@ -83,11 +75,11 @@ void Stabilizer_Update(float angles[2], float angular_velocities[3], int8_t cont
 
     /* Angle PID's */
     //roll    
-    duty_cycles[0] = PID_Calculate(&pitch_pid, radToDeg(angles[0]), set_val[0]) + (float) (trim->roll / 100.0f);
+    duty_cycles[0] = PID_Calculate(&pitch_pid, radToDeg(angles[0]), set_val[0]);
     //pitch
-    duty_cycles[1] = PID_Calculate(&roll_pid, radToDeg(angles[1]), set_val[1]) + (float) (trim->pitch / 100.0f);
+    duty_cycles[1] = PID_Calculate(&roll_pid, radToDeg(angles[1]), set_val[1]);
     //yaw
     duty_cycles[2] = PID_Calculate(&yaw_pid, angular_velocities[2], set_val[2]);
 
-    Motors_SetPWR(control_inputs[0], duty_cycles[2], duty_cycles[1], duty_cycles[0]);    
+    Motors_SetPWM(control_inputs[0], duty_cycles[2], duty_cycles[1], duty_cycles[0]);    
 }

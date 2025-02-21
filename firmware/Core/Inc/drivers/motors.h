@@ -22,7 +22,7 @@
  * @param pitch The pitch level.
  * @param roll The roll level.
  */
-void Motors_SetPWR(uint8_t thrust, float yaw, float pitch, float roll);
+void Motors_SetPWM(uint8_t thrust, float yaw, float pitch, float roll);
 
 /**
  * @brief Switches the motors on or off.

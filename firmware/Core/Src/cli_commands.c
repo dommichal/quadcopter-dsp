@@ -3,6 +3,7 @@
 #include <stdint.h>
 
 #include "hal_imu.h"
+#include "angle_estimation.h"
 #include "usb_device.h"
 #include "nvm.h"
 
@@ -36,49 +37,25 @@ void calibrateCommand(SerialCLI *cli, int argc, const char **argv) {
     SerialCLI_WriteString(cli, "Calibrating IMU...\r\n");
 
     NVM_Storage *storage = NVM_GetStorage();
-    HAL_IMU_Calibration *calibration =  &storage->imuCalibration;
     
     if (NULL == storage) {
         return;
-    }
+    }    
 
-    HAL_IMU_stop_conversion();
-    
+    HAL_IMU_Calibration *calibration =  &storage->imuCalibration;
     HAL_IMU_calibrate(calibration);
-
+    
     if (NVM_SaveData(storage)) {
         SerialCLI_WriteString(cli, "Calibration saved.\r\n");
     } else {
         SerialCLI_WriteString(cli, "Failed.\r\n");
     }
 
-    HAL_IMU_start_conversion();
-}
-
-void trimCommand(SerialCLI *cli, int argc, const char **argv) {
-    NVM_Storage *storage = NVM_GetStorage();
-    if (NULL == storage) {
-        return;
-    }
-
-    if (argc < 3) {
-        SerialCLI_WriteString(cli, "Usage: trim <roll> <pitch>\r\n");
-        SerialCLI_WriteString(cli, "Current settings: roll %d, pitch %d\r\n", storage->trim.roll, storage->trim.pitch);
-        return;
-    }
-
-    storage->trim.roll = atoi(argv[1]);
-    storage->trim.pitch = atoi(argv[2]);
-
-    if (NVM_SaveData(storage)) {
-        SerialCLI_WriteString(cli, "Saved: roll %d, pitch %d\r\n", storage->trim.roll, storage->trim.pitch);
-    }
 }
 
 SerialCLI_CommandEntry commands[] = {
     {firmwareUpdateCommand, "update", "DFU in mass storage mode."},
     {calibrateCommand, "calibrate", "Calibrate IMU sensors."},
-    {trimCommand, "trim", "Set trim of roll and pitch angles."},
 };
 
 enum {

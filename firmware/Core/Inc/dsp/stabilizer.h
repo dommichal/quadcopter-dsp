@@ -7,6 +7,7 @@ enum {
   MAX_TRIM = 500,
 };
 
+/* For future use */
 typedef struct __attribute__((packed)) {
   int16_t roll;
   int16_t pitch;
@@ -18,7 +19,7 @@ typedef struct __attribute__((packed)) {
  * This function initializes the stabilizer module and prepares it for operation.
  * It should be called before using any other functions in the stabilizer module.
  */
-void Stabilizer_init(Stabilizer_Trim *trimSettings);
+void Stabilizer_init();
 
 /**
  * @brief Stabilizes the quadcopter using the given angles, angular velocities, and control inputs.

@@ -3,7 +3,6 @@
 
 #include "hal_imu.h"
 #include "hal_radio.h"
-#include "stabilizer.h"
 
 #include <stdbool.h>
 #include <assert.h>
@@ -18,7 +17,6 @@ extern "C" {
 
 typedef struct __attribute__((packed)) {
     HAL_IMU_Calibration imuCalibration;
-    Stabilizer_Trim trim;
     uint32_t checksum;
 } NVM_Storage __attribute__((aligned(4)));
 

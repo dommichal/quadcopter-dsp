@@ -1,20 +1,32 @@
 #if !defined(ANGLE_ESTIMATION)
 #define ANGLE_ESTIMATION
-#include "math.h"
-#include "stdbool.h"
-#include <filters.h>
 
-#define degToRad(angleInDegrees) ((angleInDegrees) * 3.141592f / 180.0f)
-#define radToDeg(angleInRadians) ((angleInRadians) * 180.0f / 3.141592f)
+#include <stdbool.h>
 
-#define AX_OFFSET 0.05f
+#include "filters.h"
+
+/* Inline macro for converting degrees to radians */
+static inline float degToRad(float angleInDegrees) {
+  return angleInDegrees * 3.141592f / 180.0f;
+}
+
+/* Inline macro for converting radians to degrees */
+static inline float radToDeg(float angleInRadians) {
+  return angleInRadians * 180.0f / 3.141592f;
+}
 
 #ifndef COMPLEMENTARY
 #define KALMAN
 #endif
 
+/* For future use */
+typedef struct  __attribute__((packed)) {
+  float roll;
+  float pitch;
+} Estimator_Compenstation;
+
 typedef struct {
-  float kalman_angle;
+  float state;
   float kalman_gain;
   float variancePrediction;
   float extrapolationTerm;
@@ -35,7 +47,7 @@ void Euler_ComputeAngles(float acc_buf[3], float angles[2]);
  * @brief calculates the rotational speed of Euler angles
  * @note Remap gyro angular velocity (mpu on pcb orientation)
  *       gyro_x = -gyro_x;
- * @param angle_change Euler angular velocities
+ * @param angle_change Euler angular velocities [roll, pitch, yaw]
  * @param angles current estimation of euler angles [roll, pitch, yaw]
  * @param gyro gyro inputs [x, y, z]
  */
@@ -53,7 +65,7 @@ void Kalman_Init(KalmanFilter *kalman);
 
 void Kalman_Estimate(KalmanFilter *kalman, float *kalman_state, float measurement, float velocity);
 
-void Estimator_Init(float dt, float alpha, float tau);
+void Estimator_Init(float dt);
 
 /**
  * @brief Calculates Euler angles estimates using

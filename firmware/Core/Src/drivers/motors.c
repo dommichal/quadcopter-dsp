@@ -30,7 +30,7 @@ void Motors_Switch(bool power_on){
   }
 }
 
-void Motors_SetPWR(uint8_t thrust, float yaw, float pitch, float roll)
+void Motors_SetPWM(uint8_t thrust, float yaw, float pitch, float roll)
 {
   //Motor 1 PWM duty cycle
   TIM2->CCR1 = (uint32_t) (THRUST_CONST * thrust - PITCH_CONST * pitch + YAW_CONST * yaw - ROLL_CONST * roll);
