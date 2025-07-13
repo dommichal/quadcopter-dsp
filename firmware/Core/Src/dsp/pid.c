@@ -5,6 +5,7 @@
 
 #include <pid.h>
 
+#include <stddef.h>
 #include <assert.h>
 
 void PID_init(PIDController *pid) {

@@ -8,6 +8,7 @@
 #include "dsp/stabilizer.h"
 
 #include <assert.h>
+#include <stddef.h>
 
 #include "dsp/filters.h"
 #include "dsp/angle_estimation.h"
