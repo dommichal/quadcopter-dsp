@@ -6,13 +6,12 @@ import math
 import threading
 import numpy as np
 
-ser = serial.Serial('/dev/ttyUSB0', 57600)
 
 class XboxController(object):
     MAX_TRIG_VAL = math.pow(2, 8)
     MAX_JOY_VAL = math.pow(2, 15)
 
-    def __init__(self):
+    def __init__(self, serial_port='/dev/ttyUSB0', baud_rate=57600):
         self.LeftJoystickY = 0
         self.LeftJoystickX = 0
         self.RightJoystickY = 0
@@ -34,50 +33,55 @@ class XboxController(object):
         self.UpDPad = 0
         self.DownDPad = 0
 
+        self.serial = serial.Serial(serial_port, baud_rate)
+
         self._monitor_thread = threading.Thread(target=self._monitor_controller, args=())
         self._monitor_thread.daemon = True
         self._monitor_thread.start()
 
 
-    def read(self): # return the buttons/triggers that you care about in this methode
+    def read(self):
+        """Return the buttons/triggers that you care about in this method."""
         x = self.LeftJoystickX
         y = self.LeftJoystickY
         a = self.A
         return [x, y, a]
     
     def send(self):
-        x1 = np.uint8(np.int8(-round(self.LeftTrigger*100) + round(self.RightTrigger*100)))
-        y1 = np.uint8(np.int8(-round(self.LeftJoystickY*100)))
-        x2 = np.uint8(np.int8(-round(self.RightJoystickX*100)))
-        y2 = np.uint8(np.int8(round(self.RightJoystickY*100)))
+        """Send controller data to serial device and read sensor response."""
+        x1 = np.uint8(np.int8(-round(self.LeftTrigger * 100) + round(self.RightTrigger * 100)))
+        y1 = np.uint8(np.int8(-round(self.LeftJoystickY * 100)))
+        x2 = np.uint8(np.int8(-round(self.RightJoystickX * 100)))
+        y2 = np.uint8(np.int8(round(self.RightJoystickY * 100)))
         a = self.A
         b = self.B
 
-        ser.write(bytearray([y1, y2, x1, x2, a, b]))
-        msg = ser.read(24)
+        self.serial.write(bytearray([y1, y2, x1, x2, a, b]))
+        msg = self.serial.read(24)
 
         try:
             [acc0, acc1, acc2, gyro0, gyro1, gyro2] = struct.unpack('6f', msg)
             print(f"{acc0:7.2f} {acc1:7.2f} {acc2:7.2f} {gyro0:7.2f} {gyro1:7.2f} {gyro2:7.2f}", end="\r")
-        except:
+        except struct.error:
             pass
 
     def _monitor_controller(self):
+        """Monitor controller input events and update state."""
         while True:
             events = get_gamepad()
             for event in events:
                 if event.code == 'ABS_Y':
-                    self.LeftJoystickY = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.LeftJoystickY = event.state / XboxController.MAX_JOY_VAL
                 elif event.code == 'ABS_X':
-                    self.LeftJoystickX = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.LeftJoystickX = event.state / XboxController.MAX_JOY_VAL
                 elif event.code == 'ABS_RY':
-                    self.RightJoystickY = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.RightJoystickY = event.state / XboxController.MAX_JOY_VAL
                 elif event.code == 'ABS_RX':
-                    self.RightJoystickX = event.state / XboxController.MAX_JOY_VAL # normalize between -1 and 1
+                    self.RightJoystickX = event.state / XboxController.MAX_JOY_VAL
                 elif event.code == 'ABS_Z':
-                    self.LeftTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
+                    self.LeftTrigger = event.state / XboxController.MAX_TRIG_VAL
                 elif event.code == 'ABS_RZ':
-                    self.RightTrigger = event.state / XboxController.MAX_TRIG_VAL # normalize between 0 and 1
+                    self.RightTrigger = event.state / XboxController.MAX_TRIG_VAL
                 elif event.code == 'BTN_TL':
                     self.LeftBumper = event.state
                 elif event.code == 'BTN_TR':
@@ -85,9 +89,9 @@ class XboxController(object):
                 elif event.code == 'BTN_SOUTH':
                     self.A = event.state
                 elif event.code == 'BTN_NORTH':
-                    self.Y = event.state #previously switched with X
+                    self.Y = event.state
                 elif event.code == 'BTN_WEST':
-                    self.X = event.state #previously switched with Y
+                    self.X = event.state
                 elif event.code == 'BTN_EAST':
                     self.B = event.state
                 elif event.code == 'BTN_THUMBL':
@@ -110,7 +114,7 @@ class XboxController(object):
 
 if __name__ == '__main__':
     joy = XboxController()
-    ser.timeout = 4
+    joy.serial.timeout = 4
     while True:
         try:
             joy.send()
