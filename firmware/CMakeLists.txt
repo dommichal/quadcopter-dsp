@@ -21,7 +21,7 @@ string(TOLOWER ${MCU_FAMILY} MCU_FAMILY_LOWER)
 
 # Define the build type
 if(NOT CMAKE_BUILD_TYPE)
-    set(CMAKE_BUILD_TYPE "Debug")
+    set(CMAKE_BUILD_TYPE "MinSizeRel" CACHE STRING "Build type" FORCE)
 endif()
 
 # Set the project name
